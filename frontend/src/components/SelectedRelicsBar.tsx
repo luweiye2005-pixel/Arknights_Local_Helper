@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button, InputNumber, Space, Switch, Tooltip, Typography } from "antd";
 import type { RelicBrief, RelicConditionParam, RelicConditionSchema } from "../api/client";
 
@@ -16,7 +16,7 @@ type Props = {
   iconRev?: number;
 };
 
-function schemaOf(
+export function schemaOf(
   id: string,
   catalogMap: Map<string, RelicBrief>,
   conditions: Record<string, RelicConditionSchema>,
@@ -25,7 +25,7 @@ function schemaOf(
   return conditions[id] || r?.condition_schema;
 }
 
-function sortPriority(schema?: RelicConditionSchema) {
+export function sortPriority(schema?: RelicConditionSchema) {
   const params = schema?.params || [];
   if (params.some((p) => p.type === "toggle")) return 0;
   if (params.some((p) => p.type === "number" && p.id !== "gold")) return 1;
@@ -33,7 +33,7 @@ function sortPriority(schema?: RelicConditionSchema) {
   return 3;
 }
 
-function effectTooltip(r?: RelicBrief, schema?: RelicConditionSchema) {
+export function effectTooltip(r?: RelicBrief, schema?: RelicConditionSchema) {
   const bits: string[] = [];
   if (r?.usage) bits.push(r.usage);
   if (r?.effects?.length) {
@@ -58,6 +58,7 @@ export default function SelectedRelicsBar({
   onSharedGoldChange,
   iconRev = 1,
 }: Props) {
+  const [collapsed, setCollapsed] = useState(false);
   const byId = useMemo(() => new Map(catalog.map((r) => [r.id, r])), [catalog]);
 
   const hasGold = useMemo(
@@ -120,30 +121,42 @@ export default function SelectedRelicsBar({
   return (
     <div className="selected-relics">
       <div className="selected-relics-head">
-        <Text strong>已选藏品（{value.length}）</Text>
+        <Space size={4}>
+          <Button
+            size="small"
+            type="text"
+            className="collapse-btn"
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            {collapsed ? "▶" : "▼"}
+          </Button>
+          <Text strong>已选藏品（{value.length}）</Text>
+        </Space>
         <Button size="small" onClick={() => onChange([])}>
           清空
         </Button>
       </div>
-      {hasGold && (
-        <div className="selected-relics-gold">
-          <Text type="secondary">当前源石锭</Text>
-          <InputNumber
-            min={0}
-            max={999}
-            value={sharedGold}
-            onChange={(n) => onSharedGoldChange?.(Number(n) || 0)}
-          />
-          <Text type="secondary">（投币玩具 / 骑士戒律 / 金酒之杯共用）</Text>
-        </div>
-      )}
-      <Space direction="vertical" style={{ width: "100%" }} size="small">
-        {displayIds.map((id) => {
+      {!collapsed && (
+        <>
+          {hasGold && (
+            <div className="selected-relics-gold">
+              <Text type="secondary">当前源石锭</Text>
+              <InputNumber
+                min={0}
+                max={999}
+                value={sharedGold}
+                onChange={(n) => onSharedGoldChange?.(Number(n) || 0)}
+              />
+              <Text type="secondary">（投币玩具 / 骑士戒律 / 金酒之杯共用）</Text>
+            </div>
+          )}
+          <div className="selected-relics-list">
+            {displayIds.map((id) => {
           const r = byId.get(id);
           const schema = schemaOf(id, byId, conditions);
           const src = `${r?.icon_url || `/api/v1/assets/relic/${id}`}?v=${iconRev}`;
           const vals = conditionValues[id] || {};
-          const tip = effectTooltip(r, schema);
+          const tip = effectTooltip(r, schema) || id;
           return (
             <div key={id} className="selected-relic-row">
               <Tooltip title={<span style={{ whiteSpace: "pre-wrap" }}>{tip}</span>}>
@@ -170,7 +183,9 @@ export default function SelectedRelicsBar({
             </div>
           );
         })}
-      </Space>
+          </div>
+        </>
+      )}
     </div>
   );
 }

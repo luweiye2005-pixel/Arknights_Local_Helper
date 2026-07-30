@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import json
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -193,3 +195,24 @@ def prepare_local(
         "icons_job": icon_job,
         "message": "数据已写入 MySQL；图标正在后台下载到本地，可刷新查看进度",
     }
+
+
+# ---- 面板状态持久化 ----
+
+PANEL_STATE_PATH = REPO_ROOT / "data" / "panel_state.json"
+
+
+@router.get("/panel-state")
+def get_panel_state():
+    if PANEL_STATE_PATH.exists():
+        return json.loads(PANEL_STATE_PATH.read_text(encoding="utf-8"))
+    return {}
+
+
+@router.post("/panel-state")
+def save_panel_state(body: dict):
+    PANEL_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PANEL_STATE_PATH.write_text(
+        json.dumps(body, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return {"saved": True}

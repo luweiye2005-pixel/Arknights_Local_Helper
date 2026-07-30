@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from app.combat.relics import (
     CombatModifiers,
+    EnemyStatModifiers,
     build_relic_modifiers,
     modifiers_from_effect_rows,
     modifiers_from_patch,
@@ -91,3 +92,63 @@ def test_parse_enemy_fang_and_compound():
     assert abs(m2.atk_pct - 0.4) < 1e-6
     assert abs(m2.def_pct - 0.4) < 1e-6
     assert abs(m2.hp_pct - 0.4) < 1e-6
+
+
+# ---------- EnemyStatModifiers ----------
+
+def test_enemy_stat_modifiers_defaults():
+    m = EnemyStatModifiers()
+    assert m.hp_pct == 0.0
+    assert m.atk_pct == 0.0
+    assert m.def_pct == 0.0
+    assert m.aspd == 0.0
+    assert m.res_flat == 0.0
+    assert m.notes == []
+
+
+def test_enemy_stat_modifiers_merge():
+    a = EnemyStatModifiers(
+        hp_pct=0.1,
+        atk_pct=0.2,
+        def_pct=0.15,
+        aspd=5,
+        res_flat=10,
+        notes=["a"],
+    )
+    b = EnemyStatModifiers(
+        hp_pct=0.1,
+        atk_pct=-0.05,
+        def_pct=0.0,
+        aspd=-3,
+        res_flat=-5,
+        notes=["b"],
+    )
+    m = a.merge(b)
+    assert abs(m.hp_pct - 0.2) < 1e-6
+    assert abs(m.atk_pct - 0.15) < 1e-6
+    assert abs(m.def_pct - 0.15) < 1e-6
+    assert m.aspd == 2
+    assert m.res_flat == 5
+    assert m.notes == ["a", "b"]
+
+
+def test_enemy_stat_modifiers_to_dict():
+    m = EnemyStatModifiers(
+        hp_pct=0.2,
+        atk_pct=0.15,
+        notes=["测试"],
+    )
+    d = m.to_dict()
+    assert d["hp_pct"] == 0.2
+    assert d["atk_pct"] == 0.15
+    assert d["def_pct"] == 0.0
+    assert d["notes"] == ["测试"]
+
+
+def test_enemy_stat_modifiers_merge_zero():
+    """零值合并后应保持不变。"""
+    a = EnemyStatModifiers(hp_pct=0.3, atk_pct=0.0)
+    b = EnemyStatModifiers()
+    m = a.merge(b)
+    assert abs(m.hp_pct - 0.3) < 1e-6
+    assert m.atk_pct == 0.0

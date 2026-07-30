@@ -148,6 +148,7 @@ def test_calculate_panel_with_module_and_relics():
                 "relic_ids": ["r1"],
                 "theme_id": "rogue_1",
                 "equivalent_grade": 3,
+                "apply_outer_buff": False,
             }
         )
 

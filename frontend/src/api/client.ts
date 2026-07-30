@@ -87,6 +87,32 @@ export async function getOperator(id: string) {
   return data;
 }
 
+export type OperatorSkill = {
+  skill_id: string;
+  skill_name?: string;
+  levels: {
+    level: number;
+    name?: string;
+    atk_scale: number;
+    duration: number;
+    description?: string;
+    sp_cost?: number;
+    sp_init?: number;
+    attack_speed: number;
+    base_attack_time: number;
+    damage_scale: number;
+    secondary_scale: number;
+    cnt: number;
+    hp_pct: number;
+    def_pct: number;
+  }[];
+};
+
+export async function getOperatorSkills(id: string) {
+  const { data } = await api.get(`/operators/${id}/skills`);
+  return data.skills as OperatorSkill[];
+}
+
 export async function searchEnemies(q: string, limit = 30, themeId?: string) {
   const { data } = await api.get("/enemies", {
     params: { q: q || undefined, limit, theme_id: themeId || undefined },
@@ -191,4 +217,13 @@ export async function prefetchRelicIcons(all = true) {
     params: { all, background: true },
   });
   return data;
+}
+
+export async function loadPanelState(): Promise<Record<string, unknown>> {
+  const { data } = await api.get("/knowledge/panel-state");
+  return data || {};
+}
+
+export async function savePanelState(state: Record<string, unknown>) {
+  await api.post("/knowledge/panel-state", state);
 }

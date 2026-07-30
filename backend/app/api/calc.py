@@ -17,9 +17,12 @@ class ManualBonus(BaseModel):
 
 
 class SkillManual(BaseModel):
-    """技能/天赋手填：直接乘算 + 最终乘算。"""
+    """技能参数（自动或手填）。"""
 
     atk_pct: float = 0  # 「攻击力+X%」如 1.8
+    hp_pct: float = 0  # 「生命值+X%」
+    def_pct: float = 0  # 「防御力+X%」
+    aspd: float = 0  # 攻速变化
     atk_scale_to: List[float] = Field(default_factory=list)  # 「提升至」如 [125, 220]
     damage_scale_pct: float = 100  # 「造成攻击力X%」
 
@@ -28,6 +31,7 @@ class EnemyManual(BaseModel):
     flat_def_reduce: float = 0
     def_pct_reduce: float = 0
     ignore_def_pct: float = 0
+    ignore_res: float = 0
     phys_damage_taken_pct: float = 0
     phys_damage_reduction: float = 0
     arts_damage_taken_pct: float = 0

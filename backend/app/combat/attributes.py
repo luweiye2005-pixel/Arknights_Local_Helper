@@ -95,24 +95,99 @@ def skill_multiplier_and_duration(
     skill_levels: list[dict],
     skill_level: int,
 ) -> dict[str, Any]:
-    """从技能 blackboard 提取攻击倍率与持续时间。"""
+    """从技能 blackboard 提取攻击倍率、攻速、间隔与持续时间。"""
+    defaults = {
+        "atk_scale": 1.0, "duration": 0.0, "name": None,
+        "blackboard": [], "attack_speed": 0.0, "base_attack_time": 0.0,
+        "damage_scale": 1.0, "secondary_scale": 0.0, "cnt": 1,
+        "hp_pct": 0.0, "def_pct": 0.0,
+    }
     if not skill_levels:
-        return {"atk_scale": 1.0, "duration": 0.0, "name": None, "blackboard": []}
+        return defaults
 
     idx = max(0, min(skill_level - 1, len(skill_levels) - 1))
     lv = skill_levels[idx]
     bb = {b.get("key"): b.get("value") for b in (lv.get("blackboard") or []) if isinstance(b, dict)}
 
-    scale = 1.0
+    # --- 收集所有候选倍率 key，取最大值作为主倍率 ---
+    def _to_scale(k: str, v: float) -> float:
+        """将 blackboard 值转换为 ATK 倍率。"""
+        if v <= 0:
+            return 0.0
+        if k == "atk":
+            # atk 一律是加算百分比（0.4→+40%, 1.5→+150%, 2.3→+230%）
+            if v < 5:
+                return 1.0 + v
+        return v  # atk_scale / attack@atk_scale / damage_scale / value
+
+    candidates: list[tuple[str, float]] = []
     for key in ("atk_scale", "attack@atk_scale", "damage_scale", "value", "atk"):
         if key in bb and bb[key] is not None:
             val = float(bb[key])
-            # atk 若 > 2 可能是加算百分比（如 0.8 表示 +80%）
-            if key == "atk" and 0 < val < 5:
-                scale = 1.0 + val if val < 2 else val
-            else:
-                scale = val if val > 0 else 1.0
-            break
+            s = _to_scale(key, val)
+            if s > 1.0:
+                candidates.append((key, s))
+
+    # 主倍率 = 值最大的候选
+    scale = 1.0
+    primary_key = None
+    if candidates:
+        candidates.sort(key=lambda x: -x[1])
+        primary_key, scale = candidates[0]
+
+    # --- 次要倍率: 其余候选 + attack@atk_scale_* / append_atk_scale ---
+    secondary = 0.0
+    used_keys = {primary_key} if primary_key else set()
+    # 先看其他候选
+    for key, s in candidates[1:]:
+        if s > secondary:
+            secondary = s
+        used_keys.add(key)
+    # 再看命名空间 key
+    for key, val in sorted(bb.items()):
+        if key in used_keys:
+            continue
+        if key.startswith("attack@atk_scale_") or key.startswith("atk_scale_") or key == "append_atk_scale":
+            try:
+                v = float(val)
+                if v > 0 and v > secondary:
+                    secondary = v
+            except (TypeError, ValueError):
+                pass
+
+    # --- damage_scale（独立字段） ---
+    dmg_scale = 1.0
+    if "damage_scale" in bb and bb["damage_scale"] is not None:
+        dmg_scale = float(bb["damage_scale"])
+
+    # --- 攻速 ---
+    aspd = 0.0
+    if "attack_speed" in bb and bb["attack_speed"] is not None:
+        aspd = float(bb["attack_speed"])
+
+    # --- 攻击间隔 ---
+    bat = 0.0
+    if "base_attack_time" in bb and bb["base_attack_time"] is not None:
+        bat = float(bb["base_attack_time"])
+
+    # --- 攻击次数 ---
+    cnt = 1
+    if "cnt" in bb and bb["cnt"] is not None:
+        cnt = int(float(bb["cnt"]))
+
+    # --- HP 变化（加算百分比，同 atk） ---
+    hp_pct = 0.0
+    if "max_hp" in bb and bb["max_hp"] is not None:
+        v = float(bb["max_hp"])
+        if 0 < v < 5:
+            hp_pct = v
+
+    # --- DEF 变化（加算百分比） ---
+    def_pct = 0.0
+    if "def" in bb and bb["def"] is not None:
+        v = float(bb["def"])
+        if 0 < v < 5:
+            def_pct = v
 
     duration = float(lv.get("duration") or 0)
     if duration < 0:
@@ -124,4 +199,11 @@ def skill_multiplier_and_duration(
         "name": lv.get("name"),
         "blackboard": lv.get("blackboard") or [],
         "description": lv.get("description"),
+        "attack_speed": aspd,
+        "base_attack_time": bat,
+        "damage_scale": dmg_scale,
+        "secondary_scale": secondary,
+        "cnt": cnt,
+        "hp_pct": hp_pct,
+        "def_pct": def_pct,
     }

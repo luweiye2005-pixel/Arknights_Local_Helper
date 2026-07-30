@@ -185,3 +185,14 @@ CREATE TABLE IF NOT EXISTS relic_upgrade_steps (
   KEY idx_rus_relic (relic_id),
   CONSTRAINT fk_rus_group FOREIGN KEY (group_id) REFERENCES relic_upgrade_groups(group_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS operator_talents (
+  operator_id VARCHAR(64) NOT NULL,
+  talent_index INT NOT NULL DEFAULT 0,
+  name VARCHAR(128) NOT NULL DEFAULT '',
+  description TEXT NULL,
+  potential_rank INT NOT NULL DEFAULT 0,
+  blackboard JSON NULL,
+  PRIMARY KEY (operator_id, talent_index, potential_rank),
+  CONSTRAINT fk_talent_op FOREIGN KEY (operator_id) REFERENCES operators(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

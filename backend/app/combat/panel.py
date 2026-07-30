@@ -41,6 +41,9 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         damage_type = "PHYS"
 
     skill_atk_pct = float(skill_manual.get("atk_pct") or 0)
+    skill_hp_pct = float(skill_manual.get("hp_pct") or 0)
+    skill_def_pct = float(skill_manual.get("def_pct") or 0)
+    skill_aspd = float(skill_manual.get("aspd") or 0)
 
     relic_ids = list(payload.get("relic_ids") or [])
     relics_applied = []
@@ -156,12 +159,12 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         total = mods.merge(outer_mods).merge(manual_mods)
         total_mods = total
 
-        # 直接乘算：藏品/条件/局外/手填ATK% + 技能「攻击力+%」加算
+        # 直接乘算：藏品/条件/局外/手填 + 技能参数加算
         direct_atk_pct = total.atk_pct + skill_atk_pct
         combat_atk = base["atk"] * (1.0 + direct_atk_pct) + total.atk_flat
-        final_hp = base["hp"] * (1.0 + total.hp_pct)
-        final_def = base["def"] * (1.0 + total.def_pct)
-        final_aspd = base["attack_speed"] + total.aspd
+        final_hp = base["hp"] * (1.0 + total.hp_pct + skill_hp_pct)
+        final_def = base["def"] * (1.0 + total.def_pct + skill_def_pct)
+        final_aspd = base["attack_speed"] + total.aspd + skill_aspd
         final_interval = attack_interval(base["base_attack_time"], final_aspd)
 
         relic_dmg = total.damage_pct
@@ -217,6 +220,9 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
                 "def_pct_from_manual": manual_mods.def_pct,
                 "aspd_from_manual": manual_mods.aspd,
                 "atk_pct_from_skill": skill_atk_pct,
+                "hp_pct_from_skill": skill_hp_pct,
+                "def_pct_from_skill": skill_def_pct,
+                "aspd_from_skill": skill_aspd,
                 "apply_outer_buff": apply_outer_buff,
                 "damage_pct": final["damage_pct"],
                 "ignore_def_pct": total.ignore_def_pct,
@@ -247,17 +253,48 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         )
 
     if enemy_id:
+        # 原始面板（无难度修正）
+        enemy_raw = gdb.get_enemy_row(
+            enemy_id,
+            level=enemy_level_index,
+            theme_id=None,
+            equivalent_grade=0,
+        )
+        if not enemy_raw:
+            raise ValueError(f"未找到敌人: {enemy_id}")
+        raw_attrs = dict(enemy_raw.get("attributes") or {})
+
+        # 难度修正后面板
         enemy = gdb.get_enemy_row(
             enemy_id,
             level=enemy_level_index,
             theme_id=theme_id,
             equivalent_grade=equivalent_grade,
         )
-        if not enemy:
-            raise ValueError(f"未找到敌人: {enemy_id}")
+        attrs = dict(enemy.get("attributes") or {}) if enemy else raw_attrs
 
-        attrs = dict(enemy.get("attributes") or {})
         emods = build_enemy_relic_modifiers(relic_ids=relic_ids, equivalent_grade=equivalent_grade)
+
+        enemy_base = {
+            "hp": float(raw_attrs.get("hp") or 0),
+            "atk": float(raw_attrs.get("atk") or 0),
+            "def": float(raw_attrs.get("def") or 0),
+            "magic_resistance": float(raw_attrs.get("magic_resistance") or 0),
+            "attack_speed": float(raw_attrs.get("attack_speed") or 0),
+            "move_speed": float(raw_attrs.get("move_speed") or 0),
+            "range_radius": float(raw_attrs.get("range_radius") or 0),
+            "damage_type": raw_attrs.get("damage_type"),
+        }
+        enemy_diff = {
+            "hp": float(attrs.get("hp") or 0),
+            "atk": float(attrs.get("atk") or 0),
+            "def": float(attrs.get("def") or 0),
+            "magic_resistance": float(attrs.get("magic_resistance") or 0),
+            "attack_speed": float(attrs.get("attack_speed") or 0),
+            "move_speed": float(attrs.get("move_speed") or 0),
+            "range_radius": float(attrs.get("range_radius") or 0),
+            "damage_type": attrs.get("damage_type"),
+        }
         enemy_final = {
             "hp": float(attrs.get("hp") or 0) * (1.0 + emods.hp_pct),
             "atk": float(attrs.get("atk") or 0) * (1.0 + emods.atk_pct),
@@ -269,18 +306,20 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
             "damage_type": attrs.get("damage_type"),
         }
         result["enemy"] = {
-            "id": enemy.get("id"),
-            "name": enemy.get("name"),
-            "enemy_level": enemy.get("enemy_level"),
-            "level_index": enemy.get("level_index"),
+            "id": (enemy or enemy_raw).get("id"),
+            "name": (enemy or enemy_raw).get("name"),
+            "enemy_level": (enemy or enemy_raw).get("enemy_level"),
+            "level_index": (enemy or enemy_raw).get("level_index"),
         }
+        result["enemy_base_panel"] = enemy_base
+        result["enemy_diff_panel"] = enemy_diff
         result["enemy_final_panel"] = enemy_final
         result["bonus"]["enemy_hp_pct_from_relics"] = emods.hp_pct
         result["bonus"]["enemy_atk_pct_from_relics"] = emods.atk_pct
         result["bonus"]["enemy_def_pct_from_relics"] = emods.def_pct
         result["bonus"]["enemy_aspd_from_relics"] = emods.aspd
         result["bonus"]["enemy_res_flat_from_relics"] = emods.res_flat
-        result["bonus"]["enemy_difficulty_mods"] = enemy.get("difficulty_mods") or []
+        result["bonus"]["enemy_difficulty_mods"] = enemy.get("difficulty_mods") or [] if enemy else []
 
         steps.append("—— 敌人面板 ——")
         steps.append(

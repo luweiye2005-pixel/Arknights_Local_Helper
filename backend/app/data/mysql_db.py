@@ -142,6 +142,7 @@ def db_dsn_display() -> str:
 def _clear_all(conn) -> None:
     # FK order
     tables = [
+        "operator_talents",
         "relic_effects",
         "relic_upgrade_steps",
         "relic_upgrade_groups",
@@ -410,6 +411,34 @@ def rebuild_from_store(store: Any) -> dict[str, int]:
                                 "hp": float(lv.get("hp") or 0),
                                 "defense": float(lv.get("defense") or 0),
                                 "attack_speed": float(lv.get("attack_speed") or 0),
+                            },
+                        )
+                # talents
+                for ti, talent in enumerate(raw.get("talents") or []):
+                    for ci, cand in enumerate(talent.get("candidates") or []):
+                        bb = cand.get("blackboard") or []
+                        if isinstance(bb, list) and bb:
+                            # 确保可序列化
+                            try:
+                                bb_json = json.dumps(bb, ensure_ascii=False)
+                            except Exception:
+                                bb_json = None
+                        else:
+                            bb_json = None
+                        conn.execute(
+                            text(
+                                """
+                                INSERT IGNORE INTO operator_talents(operator_id,talent_index,name,description,potential_rank,blackboard)
+                                VALUES(:oid,:ti,:name,:desc,:pr,:bb)
+                                """
+                            ),
+                            {
+                                "oid": brief["id"],
+                                "ti": ti,
+                                "name": cand.get("name") or "",
+                                "desc": cand.get("description") or "",
+                                "pr": int(cand.get("requiredPotentialRank") or 0),
+                                "bb": bb_json,
                             },
                         )
                 op_count += 1
@@ -735,6 +764,33 @@ def get_operator_detail(operator_id: str) -> dict | None:
                 }
             )
 
+        # talents
+        talents_rows = conn.execute(
+            text(
+                """
+                SELECT talent_index,name,description,potential_rank,blackboard
+                FROM operator_talents WHERE operator_id=:id
+                ORDER BY talent_index, potential_rank
+                """
+            ),
+            {"id": operator_id},
+        ).mappings().all()
+        talents_out: list[dict] = []
+        for t in talents_rows:
+            bb = t["blackboard"]
+            if isinstance(bb, str):
+                try:
+                    bb = json.loads(bb)
+                except Exception:
+                    bb = None
+            talents_out.append({
+                "index": int(t["talent_index"]),
+                "name": t["name"],
+                "description": t["description"],
+                "potential_rank": int(t["potential_rank"] or 0),
+                "blackboard": bb,
+            })
+
         pos = (op.get("position") or "").upper() or None
         sub_id = op.get("sub_profession")
         sub_cn = None
@@ -766,6 +822,7 @@ def get_operator_detail(operator_id: str) -> dict | None:
             "description": op["description"],
             "phases": phases,
             "skills": [],
+            "talents": talents_out,
             "modules": modules,
             "favor_key_frames": favor_key_frames,
             "potential_ranks": [],

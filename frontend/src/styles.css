@@ -75,12 +75,7 @@ body {
   color: var(--muted);
 }
 
-.result-steps {
-  margin: 0;
-  padding-left: 18px;
-}
-
-.result-steps li {
+.result-steps div {
   margin-bottom: 6px;
 }
 
@@ -170,6 +165,17 @@ body {
   color: var(--muted);
 }
 
+.selected-relics-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.collapse-btn {
+  font-size: 10px;
+  padding: 0 4px;
+  line-height: 1;
+}
+
 .selected-relics-head {
   display: flex;
   justify-content: space-between;
@@ -218,5 +224,80 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+/* ---- PanelPage 分栏布局 ---- */
+.panel-page {
+  display: flex;
+  gap: 16px;
+  height: calc(100vh - 100px);
+}
+
+.panel-page-left {
+  flex: 14;
+  min-width: 0;
+  overflow-y: auto;
+  padding-bottom: 60px;
+}
+
+.panel-page-right {
+  flex: 10;
+  min-width: 0;
+  overflow-y: auto;
+  padding-bottom: 60px;
+}
+
+/* 计算悬浮按钮 */
+.calc-fab {
+  position: fixed;
+  top: 74px;
+  right: 32px;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(61, 155, 132, 0.35);
+  border-radius: 10px;
+  padding: 0 28px;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 保存悬浮按钮 */
+.save-fab {
+  position: fixed;
+  top: 126px;
+  right: 32px;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  height: 40px;
+}
+
+/* 内嵌备用按钮：大屏隐藏，小屏显示 */
+.calc-inline-btn {
+  display: none;
+  margin-top: 16px;
+}
+
+/* 小屏回退为上下布局 + 内嵌按钮 */
+@media (max-width: 992px) {
+  .panel-page {
+    flex-direction: column;
+    height: auto;
+    overflow-y: visible;
+  }
+  .panel-page-left,
+  .panel-page-right {
+    overflow-y: visible;
+    flex: auto;
+    height: auto;
+    padding-bottom: 0;
+  }
+  .calc-fab,
+  .save-fab {
+    display: none;
+  }
+  .calc-inline-btn {
+    display: block;
+  }
 }
 

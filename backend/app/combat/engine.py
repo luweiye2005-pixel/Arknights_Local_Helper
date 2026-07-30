@@ -28,8 +28,9 @@ def physical_damage(
     return max(atk * 0.05, atk - effective_def)
 
 
-def arts_damage(atk: float, res: float, ignore_res_pct: float = 0.0) -> float:
-    res = max(0.0, min(100.0, res * (1.0 - ignore_res_pct)))
+def arts_damage(atk: float, res: float, ignore_res: float = 0.0) -> float:
+    """法伤：RES 是固定值减法而非百分比（如无视20法抗 → RES−20）。"""
+    res = max(0.0, min(100.0, res - ignore_res))
     return max(atk * 0.05, atk * (1.0 - res / 100.0))
 
 
@@ -66,6 +67,7 @@ def calc_hit_damage(
     scale: float = 1.0,
     damage_pct: float = 0.0,
     ignore_def_pct: float = 0.0,
+    ignore_res: float = 0.0,
     flat_def_reduce: float = 0.0,
     def_pct_reduce: float = 0.0,
     phys_damage_taken_pct: float = 0.0,
@@ -86,7 +88,7 @@ def calc_hit_damage(
         taken = 1.0 + damage_pct + true_damage_taken_pct
         reduction = 1.0
     elif damage_type == "MAGIC":
-        basic = arts_damage(hit_atk, enemy_res)
+        basic = arts_damage(hit_atk, enemy_res, ignore_res=ignore_res)
         taken = 1.0 + damage_pct + arts_damage_taken_pct
         reduction = max(0.0, 1.0 - arts_damage_reduction)
     else:
@@ -134,8 +136,9 @@ def resolve_hit_from_panels(
 
     dtype: DamageType = "TRUE" if true_damage else (damage_type if damage_type in ("PHYS", "MAGIC", "TRUE") else "PHYS")
 
-    ignore = float(enemy_manual.get("ignore_def_pct") or 0) + float(ignore_def_pct or 0)
-    ignore = min(1.0, max(0.0, ignore))
+    ignore_def = float(enemy_manual.get("ignore_def_pct") or 0) + float(ignore_def_pct or 0)
+    ignore_def = min(1.0, max(0.0, ignore_def))
+    ignore_res_val = max(0.0, float(enemy_manual.get("ignore_res") or 0))
 
     detail = calc_hit_damage(
         atk=combat_atk,
@@ -144,7 +147,8 @@ def resolve_hit_from_panels(
         enemy_res=float(enemy_res or 0),
         scale=final_mul,
         damage_pct=float(relic_damage_pct or 0),
-        ignore_def_pct=ignore,
+        ignore_def_pct=ignore_def,
+        ignore_res=ignore_res_val,
         flat_def_reduce=float(enemy_manual.get("flat_def_reduce") or 0),
         def_pct_reduce=float(enemy_manual.get("def_pct_reduce") or 0),
         phys_damage_taken_pct=float(enemy_manual.get("phys_damage_taken_pct") or 0),
@@ -170,14 +174,17 @@ def resolve_hit_from_panels(
     if dtype == "PHYS":
         steps.append(
             f"物理：max(5%×结算ATK, 结算ATK−有效防御) = {detail['basic']:.2f}"
-            f"（敌DEF={float(enemy_def or 0):.1f}，无视防={ignore:.2%}）"
+            f"（敌DEF={float(enemy_def or 0):.1f}，无视防={ignore_def:.2%}）"
         )
         steps.append(
             f"乘区：×受伤加深{detail['taken_mul']:.4f} ×(1−物免){detail['reduction_mul']:.4f}"
             f" → 单次伤害={detail['final']:.2f}"
         )
     elif dtype == "MAGIC":
-        steps.append(f"法术：max(5%×结算ATK, 结算ATK×(1−RES/100)) = {detail['basic']:.2f}（RES={float(enemy_res or 0):.1f}）")
+        steps.append(
+            f"法术：max(5%×结算ATK, 结算ATK×(1−有效RES/100)) = {detail['basic']:.2f}"
+            f"（敌RES={float(enemy_res or 0):.1f}，无视法抗={ignore_res_val:.0f} → 有效RES={max(0.0, float(enemy_res or 0) - ignore_res_val):.1f}）"
+        )
         steps.append(
             f"乘区：×受伤加深{detail['taken_mul']:.4f} ×(1−法免){detail['reduction_mul']:.4f}"
             f" → 单次伤害={detail['final']:.2f}"

@@ -13,6 +13,9 @@ backend/.env
 # Wiki sync output（可本地生成）
 data/wiki/*.md
 
+# 本地面板状态（用户数据）
+data/panel_state.json
+
 # Runtime chroma / uploads
 
 # Runtime
