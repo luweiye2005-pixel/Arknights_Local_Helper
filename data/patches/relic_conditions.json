@@ -1,0 +1,7683 @@
+{
+  "_doc": "条件藏品参数与效果。未列出的藏品无条件控件。expr 支持 floor/ceil 与 + - * / 及参数名。由脚本从 usage 生成，可手改。",
+  "rogue_1_relic_a14": {
+    "name": "皇帝的恩宠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_a15": {
+    "name": "贵族刺剑",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_a16": {
+    "name": "老近卫军之锋",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_a17": {
+    "name": "显圣吊坠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_a18": {
+    "name": "银餐叉",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_a19": {
+    "name": "损坏的左轮弹巢",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_c13": {
+    "name": "剧作家手稿：维多利亚",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.1
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.1
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_c15": {
+    "name": "剧作家手稿：莱塔尼亚",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.1
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.1
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_m01": {
+    "name": "“游禽的右眼”",
+    "params": [
+      {
+        "id": "buff_side",
+        "type": "toggle",
+        "label": "属于加攻侧（近卫和狙击）",
+        "default": true
+      },
+      {
+        "id": "debuff_side",
+        "type": "toggle",
+        "label": "属于减攻侧（辅助和术师）",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "buff_side*0.15-debuff_side*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_m02": {
+    "name": "“游禽的左眼”",
+    "params": [
+      {
+        "id": "buff_side",
+        "type": "toggle",
+        "label": "属于加攻侧（辅助和术师）",
+        "default": true
+      },
+      {
+        "id": "debuff_side",
+        "type": "toggle",
+        "label": "属于减攻侧（近卫和狙击）",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "buff_side*0.15-debuff_side*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_m04": {
+    "name": "“剑锤”",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.1
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.1
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_m05": {
+    "name": "“断剑”",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": -0.3
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_m10": {
+    "name": "“刀舞”",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 1.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_n11": {
+    "name": "老蒲扇",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中不同职业数",
+        "default": 1,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.1"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_n18": {
+    "name": "突击协议-利刃",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中先锋和近卫对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于先锋和近卫",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER",
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_n19": {
+    "name": "突击协议-散兵",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中先锋和近卫对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于先锋和近卫",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER",
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "expr": "count*0.1*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_n20": {
+    "name": "堡垒协议-方阵",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中重装和辅助对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于重装和辅助",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK",
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_n21": {
+    "name": "堡垒协议-固守",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中重装和辅助对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于重装和辅助",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK",
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "expr": "count*0.1*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_n22": {
+    "name": "远程协议-遥击",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中医疗和狙击对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于医疗和狙击",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER",
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_n23": {
+    "name": "远程协议-克敌",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中医疗和狙击对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于医疗和狙击",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER",
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*6.0*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_n24": {
+    "name": "破坏协议-消除",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中术师和特种对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于术师和特种",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER",
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_n25": {
+    "name": "破坏协议-压制",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中术师和特种对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于术师和特种",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER",
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*6.0*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p05": {
+    "name": "钝爪-百战",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【先锋】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.5,
+        "when": "applies"
+      },
+      {
+        "attr": "def_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p07": {
+    "name": "折戟-锋刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p10": {
+    "name": "折戟-破釜沉舟",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": -0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p12": {
+    "name": "铁卫-侵掠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p13": {
+    "name": "铁卫-不动",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.25,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p14": {
+    "name": "铁卫-推进",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 40.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p17": {
+    "name": "残弩-百步穿杨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p19": {
+    "name": "残弩-交叉火力",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": -0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p20": {
+    "name": "残弩-神速",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p22": {
+    "name": "断杖-织法者",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p23": {
+    "name": "断杖-咏唱",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 40.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p25": {
+    "name": "断杖-苦难巫咒",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": -0.4
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p27": {
+    "name": "支柱-次要战场",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【辅助】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p29": {
+    "name": "支柱-破兵",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "减益条件成立",
+        "default": true
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": -0.15,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p33": {
+    "name": "医者-强效试剂",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【医疗】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p34": {
+    "name": "医者-妙手",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【医疗】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p37": {
+    "name": "锈刃-处决",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p38": {
+    "name": "锈刃-单兵",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "def_pct",
+        "value": 0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_p46": {
+    "name": "极速之手",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "周围八格无我方",
+        "default": false
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "处决者",
+            "伏击客",
+            "傀儡师"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "100*active*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_q26": {
+    "name": "投币玩具",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*3"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_q27": {
+    "name": "骑士戒律·新编",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*5"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_q28": {
+    "name": "金酒之杯",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*7"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_q29": {
+    "name": "绿叶菜罐头",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_q30": {
+    "name": "073号安全试剂",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.65,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_q31": {
+    "name": "叙拉古人的愤怒",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_q33": {
+    "name": "荣耀绶带",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "仅阻挡1名敌人",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_1_relic_sp01": {
+    "name": "国王的新枪",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命为1",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_103": {
+    "name": "老蒲扇",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中不同职业数",
+        "default": 1,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.1"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_109": {
+    "name": "突击协议-利刃",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中先锋和近卫对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于先锋和近卫",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER",
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_110": {
+    "name": "堡垒协议-方阵",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中重装和辅助对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于重装和辅助",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK",
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_111": {
+    "name": "远程协议-遥击",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中医疗和狙击对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于医疗和狙击",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER",
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_112": {
+    "name": "破坏协议-压制",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中术师和特种对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于术师和特种",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER",
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*6.0*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_113": {
+    "name": "投币玩具",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*3"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_114": {
+    "name": "骑士戒律·新编",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*5"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_115": {
+    "name": "绿叶菜罐头",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_116": {
+    "name": "叙拉古人的愤怒",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_118": {
+    "name": "荣耀绶带",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "仅阻挡1名敌人",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_122": {
+    "name": "国王的新枪",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命为1",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_13": {
+    "name": "皇帝的恩宠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_131": {
+    "name": "刻勋之手",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "击败叠层",
+        "default": 0,
+        "min": 0,
+        "max": 99
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "无畏者",
+            "决战者",
+            "武者"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.01*applies"
+      },
+      {
+        "attr": "aspd",
+        "expr": "stacks*1*applies"
+      },
+      {
+        "attr": "hp_pct",
+        "expr": "stacks*0.01*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_133": {
+    "name": "铁卫-临时要塞",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "部署后窗口内（且职业匹配）",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      },
+      {
+        "attr": "def_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_134": {
+    "name": "碎靶之手",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "连续伤害叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "炮手",
+            "扩散术师",
+            "投掷手"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.15*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_138": {
+    "name": "疗养体验卡",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "部署后10秒内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 40.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_139": {
+    "name": "疗养特供卡",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "部署后10秒内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_14": {
+    "name": "贵族刺剑",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_146": {
+    "name": "诸王的冠冕",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命为1",
+        "default": false
+      },
+      {
+        "id": "set_complete",
+        "type": "toggle",
+        "label": "集齐3件国王收藏",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "0.5+set_complete*1.0",
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_149": {
+    "name": "衍生者终端-超级改",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "按召唤物面板估算（应用到当前单位）",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": 0.3,
+        "when": "applies"
+      },
+      {
+        "attr": "atk_pct",
+        "value": 0.3,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_15": {
+    "name": "老近卫军之锋",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_153": {
+    "name": "断杖-学识",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "已拥有收藏品数",
+        "default": 0,
+        "min": 0,
+        "max": 99
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.02*applies"
+      },
+      {
+        "attr": "aspd",
+        "expr": "count*1*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_154": {
+    "name": "断杖-智慧之光",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "已拥有收藏品数",
+        "default": 0,
+        "min": 0,
+        "max": 99
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.03*applies"
+      },
+      {
+        "attr": "aspd",
+        "expr": "count*2*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_156": {
+    "name": "铁卫-城墙",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_157": {
+    "name": "铁卫-高塔",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.7,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_158": {
+    "name": "生还者合约",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      },
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "战后额外叠层",
+        "default": 0,
+        "min": 0,
+        "max": 20
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "(0.2+stacks*0.2)*applies"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "(0.2+stacks*0.2)*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_16": {
+    "name": "显圣吊坠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_17": {
+    "name": "银餐叉",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_18": {
+    "name": "损坏的左轮弹巢",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_38": {
+    "name": "涡旋座",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.32999999999999996,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_39": {
+    "name": "海程",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.32999999999999996,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_40": {
+    "name": "“基岩”",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.15
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.15
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_41": {
+    "name": "“分浪”",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": -0.25
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_42": {
+    "name": "“海洋的脉搏”",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 10
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_46": {
+    "name": "几丁质刺刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 1.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_50": {
+    "name": "钝爪-百战",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【先锋】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.5,
+        "when": "applies"
+      },
+      {
+        "attr": "def_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_52": {
+    "name": "折戟-锋刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_55": {
+    "name": "折戟-破釜沉舟",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": -0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_57": {
+    "name": "铁卫-侵掠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_58": {
+    "name": "铁卫-推进",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 40.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_61": {
+    "name": "残弩-百步穿杨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_62": {
+    "name": "残弩-交叉火力",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": -0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_63": {
+    "name": "残弩-神速",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_65": {
+    "name": "断杖-织法者",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 25.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_67": {
+    "name": "断杖-苦难巫咒",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": -0.4
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_70": {
+    "name": "支柱-援护",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【辅助】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_74": {
+    "name": "医者-妙手",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【医疗】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_77": {
+    "name": "锈刃-研磨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_78": {
+    "name": "锈刃-单兵",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "def_pct",
+        "value": 0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_fight_85": {
+    "name": "极速之手",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "周围无我方单位",
+        "default": false
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "处决者",
+            "伏击客",
+            "傀儡师"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "120*active*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_2_relic_grace_88": {
+    "name": "“决心”",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 1.2
+      },
+      {
+        "attr": "hp_pct",
+        "value": 1.2
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_book_2": {
+    "name": "锈刃-锋芒发硎",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_book_4": {
+    "name": "折戟-战吼",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "场上近卫数",
+        "default": 0,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_book_6": {
+    "name": "残弩-连珠",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "场上狙击数",
+        "default": 0,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*12.0"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_curse_1": {
+    "name": "坍缩之种",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": -0.15
+      },
+      {
+        "attr": "hp_pct",
+        "value": -0.15
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_16": {
+    "name": "霜牡的肩甲",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "阻挡≥2触发中",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "active"
+      },
+      {
+        "attr": "def_pct",
+        "value": 0.4,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_17": {
+    "name": "雪牝的护手",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "阻挡≥3触发中",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 80.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_19": {
+    "name": "岩角号",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "周围4格干员数",
+        "default": 0,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.2"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_20": {
+    "name": "不灭的火炬",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "周围4格干员数",
+        "default": 0,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*30"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_21": {
+    "name": "湖中神盾",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "开战时拥有护盾",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_22": {
+    "name": "圆石祭坛",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "永久叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.05"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "stacks*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_28": {
+    "name": "米诺斯颂诗",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "紧急作战叠层",
+        "default": 0,
+        "min": 0,
+        "max": 15
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "expr": "stacks*0.03"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_29": {
+    "name": "Friston.P",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "紧急作战叠层",
+        "default": 0,
+        "min": 0,
+        "max": 15
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "stacks*5.0"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_35": {
+    "name": "黑洞协议",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "部署费用达上限",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": 1.5,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_4": {
+    "name": "冰结的躯壳",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "受伤后加速窗口内",
+        "default": false
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "40*active*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_7": {
+    "name": "“枯木的回声”",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": -0.25
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_fight_8": {
+    "name": "凝冰砥石",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 1.0,
+        "when": "applies"
+      },
+      {
+        "attr": "def_pct",
+        "value": 1.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_105": {
+    "name": "钝爪-百战",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【先锋】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.5,
+        "when": "applies"
+      },
+      {
+        "attr": "def_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_107": {
+    "name": "折戟-锋刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_109": {
+    "name": "折戟-破釜沉舟",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": -0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_111": {
+    "name": "铁卫-侵掠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_114": {
+    "name": "残弩-百步穿杨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_115": {
+    "name": "残弩-交叉火力",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": -0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_116": {
+    "name": "残弩-神速",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_118": {
+    "name": "断杖-织法者",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 25.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_120": {
+    "name": "断杖-苦难巫咒",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": -0.4
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_123": {
+    "name": "支柱-援护",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【辅助】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_127": {
+    "name": "医者-妙手",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【医疗】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_130": {
+    "name": "锈刃-研磨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_134": {
+    "name": "极速之手",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "周围无我方单位",
+        "default": false
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "处决者",
+            "伏击客",
+            "傀儡师"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "120*active*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_136": {
+    "name": "碎靶之手",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "连续伤害叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "炮手",
+            "扩散术师",
+            "投掷手"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.15*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_152": {
+    "name": "老蒲扇",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中不同职业数",
+        "default": 1,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.1"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_158": {
+    "name": "金酒之杯",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*7"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_159": {
+    "name": "绿叶菜罐头",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_160": {
+    "name": "叙拉古人的愤怒",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_164": {
+    "name": "国王的新枪",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命为1",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_16_c": {
+    "name": "地形图-γ",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "场上我方单位数",
+        "default": 1,
+        "min": 0,
+        "max": 12
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "expr": "0.06+count*0.005"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_170": {
+    "name": "诸王的冠冕",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命为1",
+        "default": false
+      },
+      {
+        "id": "set_complete",
+        "type": "toggle",
+        "label": "集齐3件国王收藏",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "0.5+set_complete*1.0",
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_17_c": {
+    "name": "神音海螺-γ",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "场上我方单位数",
+        "default": 1,
+        "min": 0,
+        "max": 12
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "expr": "0.06+count*0.005"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_18_c": {
+    "name": "林间夜话-γ",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "场上我方单位数",
+        "default": 1,
+        "min": 0,
+        "max": 12
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "expr": "0.08+count*0.005"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_19_c": {
+    "name": "教堂救济餐券-γ",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "场上我方单位数",
+        "default": 1,
+        "min": 0,
+        "max": 12
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "expr": "0.08+count*0.005"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_2": {
+    "name": "突击协议-利刃",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中先锋和近卫对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于先锋和近卫",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER",
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_3": {
+    "name": "突击协议-散兵",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中先锋和近卫对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于先锋和近卫",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER",
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "expr": "count*0.1*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_4": {
+    "name": "堡垒协议-方阵",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中重装和辅助对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于重装和辅助",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK",
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_5": {
+    "name": "堡垒协议-固守",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中重装和辅助对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于重装和辅助",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK",
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "expr": "count*0.1*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_6": {
+    "name": "远程协议-遥击",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中医疗和狙击对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于医疗和狙击",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER",
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_7": {
+    "name": "远程协议-克敌",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中医疗和狙击对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于医疗和狙击",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER",
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*6.0*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_76": {
+    "name": "皇帝的恩宠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_77": {
+    "name": "贵族刺剑",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_78": {
+    "name": "老近卫军之锋",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_79": {
+    "name": "显圣吊坠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_8": {
+    "name": "破坏协议-消除",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中术师和特种对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于术师和特种",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER",
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_80": {
+    "name": "银餐叉",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_81": {
+    "name": "损坏的左轮弹巢",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_3_relic_legacy_9": {
+    "name": "破坏协议-压制",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中术师和特种对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于术师和特种",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER",
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*6.0*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_book_10": {
+    "name": "论断：特种",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.3,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_book_11": {
+    "name": "论断：医疗",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【医疗】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_book_12": {
+    "name": "论断：术师",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 20.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_book_13": {
+    "name": "论断：辅助",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【辅助】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_book_2": {
+    "name": "折戟-裂岩",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "场上近卫数",
+        "default": 0,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_book_5": {
+    "name": "锈刃-遗世独立",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.7,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_book_6": {
+    "name": "论断：近卫",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 20.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_book_7": {
+    "name": "论断：先锋",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【先锋】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.3,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_book_9": {
+    "name": "论断：狙击",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 20.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_curse_5": {
+    "name": "未叙魔王残片",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "减益条件成立",
+        "default": true
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": -0.3,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_fight_1": {
+    "name": "“知识之桥”",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "已用灵感层数",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "expr": "stacks*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_fight_14": {
+    "name": "魔王的床榻",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命达上限",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.2,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_fight_15": {
+    "name": "魔王的旗帜",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命达上限",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_fight_20": {
+    "name": "无惧之刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员费用最高",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_fight_23": {
+    "name": "生还者合约",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      },
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "战后额外叠层",
+        "default": 0,
+        "min": 0,
+        "max": 20
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "(0.2+stacks*0.2)*applies"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "(0.2+stacks*0.2)*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_fight_28": {
+    "name": "魔王的祭器",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命达上限",
+        "default": false
+      },
+      {
+        "id": "set_complete",
+        "type": "toggle",
+        "label": "集齐3件魔王收藏",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "expr": "0.8+set_complete*1.2",
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_fight_4": {
+    "name": "佣兵的饰物",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      },
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "完美作战叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "(0.05+stacks*0.05)*applies"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "(0.05+stacks*0.05)*applies"
+      },
+      {
+        "attr": "hp_pct",
+        "expr": "(0.05+stacks*0.05)*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_fight_6": {
+    "name": "城墙之子",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "部署在蓝门周围8格",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_fight_9": {
+    "name": "私人巫术终端",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "本场使用了灵感",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 35.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_hand_1": {
+    "name": "掠食之手",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "开技能叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "尖兵",
+            "冲锋手",
+            "战术家"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.1*applies"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "stacks*0.1*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_hand_3": {
+    "name": "波纹之手",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "已拥有配套藏品",
+        "default": false
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "扩散术师",
+            "链术师",
+            "驭械术师"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "20*active*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_hand_4": {
+    "name": "久居之手",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "在场叠层",
+        "default": 0,
+        "min": 0,
+        "max": 5
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "伏击客",
+            "行商",
+            "怪杰"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.25*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_hand_6": {
+    "name": "轰鸣之手",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "连续伤害叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "炮手",
+            "阵法术师",
+            "投掷手"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.15*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_1": {
+    "name": "突击协议-利刃",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中先锋和近卫对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于先锋和近卫",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER",
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_100": {
+    "name": "钝爪-百战",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【先锋】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.5,
+        "when": "applies"
+      },
+      {
+        "attr": "def_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_102": {
+    "name": "折戟-锋刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_104": {
+    "name": "折戟-破釜沉舟",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": -0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_106": {
+    "name": "铁卫-侵掠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_110": {
+    "name": "残弩-百步穿杨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_111": {
+    "name": "残弩-交叉火力",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": -0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_112": {
+    "name": "残弩-神速",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_114": {
+    "name": "断杖-织法者",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 25.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_116": {
+    "name": "断杖-苦难巫咒",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": -0.4
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_119": {
+    "name": "支柱-援护",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【辅助】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_123": {
+    "name": "医者-妙手",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【医疗】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_126": {
+    "name": "锈刃-研磨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_142": {
+    "name": "老蒲扇",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中不同职业数",
+        "default": 1,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.1"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_146": {
+    "name": "金酒之杯",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*7"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_147": {
+    "name": "绿叶菜罐头",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_148": {
+    "name": "叙拉古人的愤怒",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_150": {
+    "name": "国王的新枪",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命为1",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_154": {
+    "name": "诸王的冠冕",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命为1",
+        "default": false
+      },
+      {
+        "id": "set_complete",
+        "type": "toggle",
+        "label": "集齐3件国王收藏",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "0.5+set_complete*1.0",
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_158": {
+    "name": "湖中神盾",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "开战时拥有护盾",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_159": {
+    "name": "圆石祭坛",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "永久叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.05"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "stacks*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_162": {
+    "name": "Friston.P",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "紧急作战叠层",
+        "default": 0,
+        "min": 0,
+        "max": 15
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "stacks*5.0"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_164": {
+    "name": "米诺斯颂诗",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "紧急作战叠层",
+        "default": 0,
+        "min": 0,
+        "max": 15
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "expr": "stacks*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_168": {
+    "name": "岩角号",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "周围4格干员数",
+        "default": 0,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.2"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_170": {
+    "name": "荣耀绶带",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "仅阻挡1名敌人",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_171": {
+    "name": "几丁质刺刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 1.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_174": {
+    "name": "投币玩具",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*3"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_175": {
+    "name": "骑士戒律·新编",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*5"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_179": {
+    "name": "疗养体验卡",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "部署后10秒内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 40.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_180": {
+    "name": "疗养特供卡",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "部署后10秒内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_2": {
+    "name": "突击协议-散兵",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中先锋和近卫对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于先锋和近卫",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER",
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "expr": "count*0.1*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_3": {
+    "name": "堡垒协议-方阵",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中重装和辅助对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于重装和辅助",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK",
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_4": {
+    "name": "堡垒协议-固守",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中重装和辅助对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于重装和辅助",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK",
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "expr": "count*0.1*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_5": {
+    "name": "远程协议-遥击",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中医疗和狙击对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于医疗和狙击",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER",
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_6": {
+    "name": "远程协议-克敌",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中医疗和狙击对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于医疗和狙击",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER",
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*6.0*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_7": {
+    "name": "破坏协议-消除",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中术师和特种对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于术师和特种",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER",
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_71": {
+    "name": "皇帝的恩宠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_72": {
+    "name": "贵族刺剑",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_73": {
+    "name": "老近卫军之锋",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_74": {
+    "name": "显圣吊坠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_75": {
+    "name": "银餐叉",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_76": {
+    "name": "损坏的左轮弹巢",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_4_relic_legacy_8": {
+    "name": "破坏协议-压制",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "编队中术师和特种对数",
+        "default": 0,
+        "min": 0,
+        "max": 12
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员属于术师和特种",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER",
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*6.0*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_bullet_1": {
+    "name": "传芳雕版",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "弹药技能伤害叠层",
+        "default": 0,
+        "min": 0,
+        "max": 30
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.02"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_bullet_2": {
+    "name": "三尺万象",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "弹药技能开启中",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 100.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_custog_1": {
+    "name": "“摘衡”",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【近战】",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_custog_4": {
+    "name": "“掷衡”",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【远程】",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_fight_2": {
+    "name": "《拳经三问》",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "已用技能次数叠层",
+        "default": 0,
+        "min": 0,
+        "max": 40
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_105": {
+    "name": "支柱-援护",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【辅助】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.3,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_108": {
+    "name": "残弩-交叉火力",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_130": {
+    "name": "凉拌海草",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.02,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_130_a": {
+    "name": "凉拌海草-α",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.05,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_130_b": {
+    "name": "凉拌海草-β",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.08,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_130_c": {
+    "name": "凉拌海草-γ",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.11,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_131": {
+    "name": "橙味风暴",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.02,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_131_a": {
+    "name": "橙味风暴-α",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.05,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_131_b": {
+    "name": "橙味风暴-β",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.08,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_131_c": {
+    "name": "橙味风暴-γ",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.11,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_132": {
+    "name": "咖啡平原咖啡糖",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.03,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_132_a": {
+    "name": "咖啡平原咖啡糖-α",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.06,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_132_b": {
+    "name": "咖啡平原咖啡糖-β",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.09,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_132_c": {
+    "name": "咖啡平原咖啡糖-γ",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.12,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_133": {
+    "name": "尖叫樱桃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.03,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_133_a": {
+    "name": "尖叫樱桃-α",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.06,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_133_b": {
+    "name": "尖叫樱桃-β",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.09,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_133_c": {
+    "name": "尖叫樱桃-γ",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.12,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_134": {
+    "name": "古旧乐谱残章",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.04,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_134_a": {
+    "name": "古旧乐谱残章-α",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.06,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_134_b": {
+    "name": "古旧乐谱残章-β",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.08,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_134_c": {
+    "name": "古旧乐谱残章-γ",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.1,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_135_a": {
+    "name": "解约协议-α",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.03,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_135_b": {
+    "name": "解约协议-β",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.05,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_135_c": {
+    "name": "解约协议-γ",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.07,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_149": {
+    "name": "“剑锤”",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.2
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.2
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_22": {
+    "name": "皇帝的恩宠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_23": {
+    "name": "老近卫军之锋",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_24": {
+    "name": "显圣吊坠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_25": {
+    "name": "损坏的左轮弹巢",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_38": {
+    "name": "湖中神盾",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "开战时拥有护盾",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_39": {
+    "name": "城墙之子",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "部署在蓝门周围8格",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_41": {
+    "name": "金酒之杯",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*7"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_42": {
+    "name": "绿叶菜罐头",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_43": {
+    "name": "叙拉古人的愤怒",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_50": {
+    "name": "折戟-裂岩",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "场上近卫数",
+        "default": 0,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.08"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_51": {
+    "name": "残弩-连珠",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "场上狙击数",
+        "default": 0,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "count*12.0"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_55": {
+    "name": "钝爪-爆发",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【先锋】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.1,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_56": {
+    "name": "折戟-锋刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_58": {
+    "name": "折戟-破釜沉舟",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": -0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_59": {
+    "name": "铁卫-侵掠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_61": {
+    "name": "残弩-百步穿杨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.2,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_62": {
+    "name": "残弩-神速",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_63": {
+    "name": "断杖-织法者",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【术师】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "术师",
+            "CASTER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 25.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_67": {
+    "name": "医者-妙手",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【医疗】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_69": {
+    "name": "锈刃-研磨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 30.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_71": {
+    "name": "冰结的躯壳",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "受伤后加速窗口内",
+        "default": false
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "40*active*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_76": {
+    "name": "霜牡的肩甲",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "阻挡≥2触发中",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.4,
+        "when": "active"
+      },
+      {
+        "attr": "def_pct",
+        "value": 0.4,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_legacy_78": {
+    "name": "铁卫-临时要塞",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "部署后窗口内（且职业匹配）",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      },
+      {
+        "attr": "def_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_16": {
+    "name": "雪牝的护手",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "阻挡≥3触发中",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 80.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_17": {
+    "name": "圆石祭坛",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "永久叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.05"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "stacks*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_23": {
+    "name": "国王的新枪",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命为1",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_26": {
+    "name": "诸王的冠冕",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命为1",
+        "default": false
+      },
+      {
+        "id": "set_complete",
+        "type": "toggle",
+        "label": "集齐3件国王收藏",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "0.4+set_complete*0.4",
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_27": {
+    "name": "魔王的床榻",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命达上限",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.2,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_28": {
+    "name": "魔王的旗帜",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命达上限",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_29": {
+    "name": "魔王的祭器",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "目标生命达上限",
+        "default": false
+      },
+      {
+        "id": "set_complete",
+        "type": "toggle",
+        "label": "集齐3件魔王收藏",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "expr": "0.6+set_complete*0.6",
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_31": {
+    "name": "掠食之手",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "开技能叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "尖兵",
+            "冲锋手",
+            "战术家"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.1*applies"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "stacks*0.1*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_34": {
+    "name": "久居之手",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "在场叠层",
+        "default": 0,
+        "min": 0,
+        "max": 5
+      },
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配子职业",
+        "default": true,
+        "auto": {
+          "sub_profession_cn_any": [
+            "伏击客",
+            "行商",
+            "怪杰"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.25*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_6": {
+    "name": "荣耀绶带",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "仅阻挡1名敌人",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_7": {
+    "name": "生还者合约",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      },
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "战后额外叠层",
+        "default": 0,
+        "min": 0,
+        "max": 20
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "(0.2+stacks*0.2)*applies"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "(0.2+stacks*0.2)*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_5_relic_return_9": {
+    "name": "无惧之刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员费用最高",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_assign_1": {
+    "name": "钝爪-新典训",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【先锋】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.1,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_assign_12": {
+    "name": "发泡胶",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": -50.0
+      },
+      {
+        "attr": "atk_pct",
+        "value": 1.2
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_book_7": {
+    "name": "锈刃-研磨",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【特种】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "特种",
+            "SPECIAL"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.5,
+        "when": "applies"
+      },
+      {
+        "attr": "aspd",
+        "value": 50.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_cargo_12": {
+    "name": "猎印",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "减益条件成立",
+        "default": true
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": -0.5,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_final_3": {
+    "name": "怦然信标",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": -0.4
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_100": {
+    "name": "荣耀绶带",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "仅阻挡1名敌人",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_103": {
+    "name": "圆石祭坛",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "永久叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.05"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "stacks*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_105": {
+    "name": "疗养体验卡",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "部署后10秒内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 40.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_106": {
+    "name": "疗养特供卡",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "部署后10秒内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_125": {
+    "name": "《拳经三问》",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "已用技能次数叠层",
+        "default": 0,
+        "min": 0,
+        "max": 40
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.05"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_131": {
+    "name": "岩角号",
+    "params": [
+      {
+        "id": "count",
+        "type": "number",
+        "label": "周围4格干员数",
+        "default": 0,
+        "min": 0,
+        "max": 8
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "count*0.2"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_136": {
+    "name": "佣兵的饰物",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      },
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "完美作战叠层",
+        "default": 0,
+        "min": 0,
+        "max": 10
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "(0.05+stacks*0.05)*applies"
+      },
+      {
+        "attr": "def_pct",
+        "expr": "(0.05+stacks*0.05)*applies"
+      },
+      {
+        "attr": "hp_pct",
+        "expr": "(0.05+stacks*0.05)*applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_137": {
+    "name": "传芳雕版",
+    "params": [
+      {
+        "id": "stacks",
+        "type": "number",
+        "label": "弹药技能伤害叠层",
+        "default": 0,
+        "min": 0,
+        "max": 30
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "expr": "stacks*0.02"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_138": {
+    "name": "三尺万象",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "弹药技能开启中",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 100.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_142": {
+    "name": "“剑锤”",
+    "params": [],
+    "operator_effects": [
+      {
+        "attr": "def_pct",
+        "value": 0.5
+      },
+      {
+        "attr": "hp_pct",
+        "value": 0.5
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_15": {
+    "name": "皇帝的恩宠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_16": {
+    "name": "贵族刺剑",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_17": {
+    "name": "老近卫军之锋",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为近战",
+        "default": true,
+        "auto": {
+          "position": "MELEE"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_18": {
+    "name": "显圣吊坠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.15,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_19": {
+    "name": "银餐叉",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_20": {
+    "name": "损坏的左轮弹巢",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为远程",
+        "default": true,
+        "auto": {
+          "position": "RANGED"
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.35,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_52": {
+    "name": "几丁质刺刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为该随机目标",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "applies"
+      },
+      {
+        "attr": "hp_pct",
+        "value": 1.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_57": {
+    "name": "湖中神盾",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "开战时拥有护盾",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_58": {
+    "name": "城墙之子",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "部署在蓝门周围8格",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "hp_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_60": {
+    "name": "金酒之杯",
+    "params": [
+      {
+        "id": "gold",
+        "type": "number",
+        "label": "当前源石锭",
+        "default": 0,
+        "min": 0,
+        "max": 999
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "expr": "floor(gold/5)*7"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_61": {
+    "name": "绿叶菜罐头",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_62": {
+    "name": "叙拉古人的愤怒",
+    "params": [
+      {
+        "id": "active",
+        "type": "toggle",
+        "label": "技能触发窗口内",
+        "default": false
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 1.0,
+        "when": "active"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_64": {
+    "name": "钝爪-屡战",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【先锋】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "先锋",
+            "PIONEER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.5,
+        "when": "applies"
+      },
+      {
+        "attr": "def_pct",
+        "value": 0.5,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_66": {
+    "name": "折戟-锋刃",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【近卫】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "近卫",
+            "WARRIOR"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.25,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_68": {
+    "name": "铁卫-侵掠",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【重装】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "重装",
+            "TANK"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.6,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_71": {
+    "name": "残弩-神速",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【狙击】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "狙击",
+            "SNIPER"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_75": {
+    "name": "医者-妙手",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员为【医疗】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "医疗",
+            "MEDIC"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "aspd",
+        "value": 70.0,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  },
+  "rogue_6_relic_legacy_79": {
+    "name": "支柱-援护",
+    "params": [
+      {
+        "id": "applies",
+        "type": "toggle",
+        "label": "当前干员匹配【辅助】",
+        "default": true,
+        "auto": {
+          "profession": [
+            "辅助",
+            "SUPPORT"
+          ]
+        }
+      }
+    ],
+    "operator_effects": [
+      {
+        "attr": "atk_pct",
+        "value": 0.3,
+        "when": "applies"
+      }
+    ],
+    "replace_operator_panel": true
+  }
+}

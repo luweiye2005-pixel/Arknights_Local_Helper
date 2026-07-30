@@ -1,0 +1,22 @@
+"""数据访问层（MySQL）。保留 app.data.db 导入路径兼容。"""
+from app.data.mysql_db import (  # noqa: F401
+    db_counts,
+    db_dsn_display,
+    db_path,
+    get_enemy_row,
+    get_meta,
+    get_module,
+    get_operator_detail,
+    get_relic_effects_merged,
+    get_relic_row,
+    init_schema,
+    list_theme_difficulties,
+    list_themes_db,
+    rebuild_from_store,
+    refresh_theme_enemies,
+    resolve_relic_for_grade,
+    search_enemies,
+    search_operators,
+    search_relics,
+    set_meta,
+)

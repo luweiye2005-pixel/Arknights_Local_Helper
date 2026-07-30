@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Env / secrets
+.env
+backend/.env
+
+# Wiki sync output（可本地生成）
+data/wiki/*.md
+
+# Runtime chroma / uploads
+
+# Runtime
+backend/chroma_data/
+backend/uploads/
+*.db
+data/arknights.db
+data/icons/
+data/mysql_data/
+scripts/_mysql_bootstrap.sql
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.log

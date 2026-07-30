@@ -1,0 +1,11 @@
+{
+  "_doc": "遗物 id -> 手工 modifier 补丁。未列出的遗物走中文描述启发式解析。",
+  "example_relic_atk_20": {
+    "atk_pct": 0.2,
+    "note": "示例：攻击力+20%"
+  },
+  "example_relic_dmg_15": {
+    "damage_pct": 0.15,
+    "note": "示例：伤害+15%"
+  }
+}
