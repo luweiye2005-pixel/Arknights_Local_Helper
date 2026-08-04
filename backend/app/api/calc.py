@@ -23,11 +23,23 @@ class SkillManual(BaseModel):
     hp_pct: float = 0  # 「生命值+X%」
     def_pct: float = 0  # 「防御力+X%」
     aspd: float = 0  # 攻速变化
+    res_flat: float = 0  # 法抗定值（如 +15）
+    res_pct: float = 0  # 法抗百分比（如 0.8=+80%）
     atk_scale_to: List[float] = Field(default_factory=list)  # 「提升至」如 [125, 220]
     damage_scale_pct: float = 100  # 「造成攻击力X%」
 
 
 class EnemyManual(BaseModel):
+    # 敌人面板修正（定值 / 百分比，可负）
+    hp_pct: float = 0
+    hp_flat: float = 0
+    atk_pct: float = 0
+    atk_flat: float = 0
+    def_pct: float = 0
+    def_flat: float = 0
+    res_pct: float = 0
+    res_flat: float = 0
+    # 伤害结算用
     flat_def_reduce: float = 0
     def_pct_reduce: float = 0
     ignore_def_pct: float = 0

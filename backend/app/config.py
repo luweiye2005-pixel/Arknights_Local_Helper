@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     MYSQL_HOST: str = "127.0.0.1"
     MYSQL_PORT: int = 3306
     MYSQL_USER: str = "arknights"
-    MYSQL_PASSWORD: str = "yz708413"
+    MYSQL_PASSWORD: str = "your_password"
     MYSQL_DATABASE: str = "arknights_helper"
 
     CORS_ORIGINS: List[str] = Field(

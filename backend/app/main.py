@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="明日方舟本地数据面板",
-    description="同步游戏数据到 SQLite，查看属性，计算藏品加成后面板",
+    description="同步游戏数据到 MySQL，查看属性，计算藏品加成后面板",
     version="0.2.0",
     lifespan=lifespan,
 )

@@ -23,6 +23,25 @@ def test_list_operators_mysql_source():
     assert body["items"][0]["name"] == "阿米娅"
 
 
+def test_operator_skills_mysql_source():
+    fake_skills = [
+        {
+            "skill_id": "skchr_ulpia_3",
+            "skill_name": "必须开辟的通路",
+            "max_level": 10,
+            "levels": [{"level": 10, "atk_pct": 2.6, "atk_scale": 1.6}],
+        }
+    ]
+    with (
+        patch("app.api.operators.gdb.get_operator_detail", return_value={"id": "char_4145_ulpia"}),
+        patch("app.api.operators.gdb.get_operator_skills", return_value=fake_skills),
+    ):
+        response = client.get("/api/v1/operators/char_4145_ulpia/skills")
+    assert response.status_code == 200
+    assert response.json()["source"] == "mysql"
+    assert response.json()["skills"][0]["levels"][0]["atk_pct"] == 2.6
+
+
 def test_theme_difficulties_unique_keys():
     fake = [
         {

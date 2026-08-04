@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -8,14 +8,16 @@ import {
   InputNumber,
   Row,
   Select,
-  Space,
   Switch,
-  Table,
   Typography,
   message,
 } from "antd";
 import RelicGrid from "../components/RelicGrid";
 import SelectedRelicsBar from "../components/SelectedRelicsBar";
+import PanelResultCard from "../components/PanelResultCard";
+import SkillManualSection from "../components/panel/SkillManualSection";
+import EnemyStatsSection from "../components/panel/EnemyStatsSection";
+import { useSearcher } from "../hooks/useSearcher";
 import {
   RelicBrief,
   RelicConditionSchema,
@@ -24,45 +26,30 @@ import {
   getOperatorSkills,
   getThemeOuterBuff,
   listThemes,
-  loadPanelState,
   OperatorSkill,
-  savePanelState,
   searchEnemies,
   searchOperators,
 } from "../api/client";
 import { maxEliteForOperator, maxLevelForElite } from "../utils/operatorCaps";
+import { skillAutofill } from "../utils/skillAutofill";
+import { errorMessage } from "../utils/errorMessage";
+import { usePanelPersistence } from "../hooks/usePanelPersistence";
+import type {
+  DamageType,
+  EnemyManual,
+  ManualBonus,
+  OperatorDetail,
+  PanelPersistedState,
+  PanelResult,
+  SkillManual,
+} from "../types/panel";
 
 const { Title, Paragraph, Text } = Typography;
-
-function useSearcher(searchFn: (q: string) => Promise<{ value: string; label: string }[]>) {
-  const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
-  const [fetching, setFetching] = useState(false);
-  const timer = useRef<number>();
-  const seq = useRef(0);
-
-  function onSearch(q: string) {
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(async () => {
-      const id = ++seq.current;
-      setFetching(true);
-      try {
-        const opts = await searchFn(q);
-        if (id === seq.current) setOptions(opts);
-      } catch {
-        if (id === seq.current) setOptions([]);
-      } finally {
-        if (id === seq.current) setFetching(false);
-      }
-    }, 200);
-  }
-
-  return { options, fetching, onSearch, setOptions };
-}
 
 export default function PanelPage() {
   const [operatorId, setOperatorId] = useState<string>();
   const [enemyId, setEnemyId] = useState<string>();
-  const [operator, setOperator] = useState<any>();
+  const [operator, setOperator] = useState<OperatorDetail>();
   const [themes, setThemes] = useState<{ id: string; name: string; relic_count?: number }[]>([]);
   const [theme, setTheme] = useState<string>();
   const [equivalentGrade, setEquivalentGrade] = useState(0);
@@ -77,22 +64,32 @@ export default function PanelPage() {
   const [sharedGold, setSharedGold] = useState(0);
   const [applyOuterBuff, setApplyOuterBuff] = useState(true);
   const [outerBuffNote, setOuterBuffNote] = useState("");
-  const [manualBonus, setManualBonus] = useState({
+  const [manualBonus, setManualBonus] = useState<ManualBonus>({
     atk_pct: 0,
     hp_pct: 0,
     def_pct: 0,
     aspd: 0,
   });
-  const [skillManual, setSkillManual] = useState({
+  const [skillManual, setSkillManual] = useState<SkillManual>({
     atk_pct: 0,
     hp_pct: 0,
     def_pct: 0,
     aspd: 0,
+    res_flat: 0,
+    res_pct: 0,
     scale_to_1: 0,
     scale_to_2: 0,
     damage_scale_pct: null as number | null,
   });
-  const [enemyManual, setEnemyManual] = useState({
+  const [enemyManual, setEnemyManual] = useState<EnemyManual>({
+    hp_pct: 0,
+    hp_flat: 0,
+    atk_pct: 0,
+    atk_flat: 0,
+    def_pct: 0,
+    def_flat: 0,
+    res_pct: 0,
+    res_flat: 0,
     ignore_def_pct: 0,
     ignore_res: 0,
     phys_damage_taken_pct: 0,
@@ -101,16 +98,15 @@ export default function PanelPage() {
     arts_damage_reduction: 0,
     true_damage_taken_pct: 0,
   });
-  const [damageType, setDamageType] = useState<"PHYS" | "MAGIC" | "TRUE">("PHYS");
+  const [damageType, setDamageType] = useState<DamageType>("PHYS");
   const [moduleId, setModuleId] = useState<string>();
   const [moduleLevel, setModuleLevel] = useState(3);
   const [operatorSkills, setOperatorSkills] = useState<OperatorSkill[]>([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string>();
   const [selectedSkillLevel, setSelectedSkillLevel] = useState(7);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>();
+  const [result, setResult] = useState<PanelResult>();
   const [form] = Form.useForm();
-  const stateRef = useRef<Record<string, unknown>>({});
   const eliteWatch = Form.useWatch("elite", form) ?? 0;
   const levelWatch = Form.useWatch("level", form) ?? 1;
 
@@ -155,7 +151,7 @@ export default function PanelPage() {
       .then((t) => {
         setThemes(t);
         // 优先恢复保存的主题，否则选第一个
-        loadPanelState().then((saved) => {
+        loadPersistedState().then((saved) => {
           if (saved?.theme && t.some((th) => th.id === saved.theme)) {
             setTheme(saved.theme as string);
           } else if (t[0]) {
@@ -190,8 +186,6 @@ export default function PanelPage() {
               potential: saved.potential ?? 0,
             });
           }
-          // 同步 stateRef，防止 beforeunload 用空对象覆盖已保存状态
-          stateRef.current = saved || {};
         }).catch(() => {
           if (t[0]) setTheme(t[0].id);
         });
@@ -226,7 +220,7 @@ export default function PanelPage() {
 
   const moduleOptions = useMemo(
     () =>
-      (operator?.modules || []).map((m: any) => ({
+      (operator?.modules || []).map((m) => ({
         value: m.id,
         label: `${m.type || "模组"} · ${m.name}`,
         max_level: m.max_level || m.levels?.length || 1,
@@ -234,7 +228,7 @@ export default function PanelPage() {
     [operator],
   );
   const selectedModule = useMemo(
-    () => (operator?.modules || []).find((m: any) => m.id === moduleId),
+    () => (operator?.modules || []).find((m) => m.id === moduleId),
     [operator, moduleId],
   );
 
@@ -252,7 +246,7 @@ export default function PanelPage() {
 
   function matchAppliesAuto(
     auto: { position?: string; profession?: string[]; sub_profession_cn_any?: string[] } | undefined,
-    op: any,
+    op: OperatorDetail,
   ): boolean {
     if (!auto || !op) return true;
     if (auto.position) {
@@ -275,7 +269,7 @@ export default function PanelPage() {
     return true;
   }
 
-  function syncAutoApplies(op: any, relicIds: string[], schemas: Record<string, RelicConditionSchema>) {
+  function syncAutoApplies(op: OperatorDetail, relicIds: string[], schemas: Record<string, RelicConditionSchema>) {
     if (!op) return;
     setRelicConditions((prev) => {
       const next = { ...prev };
@@ -322,50 +316,18 @@ export default function PanelPage() {
       syncAutoApplies(op, selectedRelics, relicConditionsSchema);
       // 加载技能列表
       getOperatorSkills(id).then(setOperatorSkills).catch(() => setOperatorSkills([]));
-    } catch (e: any) {
-      message.error(e?.response?.data?.detail || e.message || "加载干员失败");
+    } catch (error: unknown) {
+      message.error(errorMessage(error, "加载干员失败"));
     }
   }
 
-  // 选择技能后自动填充参数
+  // 选择技能后自动填充：atk → 面板攻击%；atk_scale → 造成攻击力%；二者不合并
   useEffect(() => {
     if (!selectedSkillId || !operatorSkills.length) return;
-    const skill = operatorSkills.find((s) => s.skill_id === selectedSkillId);
-    if (!skill) return;
-    const lv = skill.levels.find((l) => l.level === selectedSkillLevel) || skill.levels[skill.levels.length - 1];
-    if (!lv) return;
-    const scale = lv.atk_scale || 1;
-    // ATK 倍率 → 攻击力+X%
-    if (scale > 1 && scale < 5) {
-      setSkillManual((p) => ({ ...p, atk_pct: Math.round((scale - 1) * 100) }));
-    } else if (scale >= 5) {
-      // 提升至 X%（如 125% 提升至）
-      setSkillManual((p) => ({ ...p, atk_pct: 0, scale_to_1: Math.round(scale), scale_to_2: 0 }));
-    }
-    // 次要倍率 → 提升至% 或 造成伤害% (如维什戴尔 attack@atk_scale_3=1.9)
-    if (lv.secondary_scale && lv.secondary_scale > 0) {
-      const s = Math.round(lv.secondary_scale * 100);
-      // 次要倍率通常表示"造成相当于攻击力X%的伤害" → damage_scale_pct
-      if (Math.abs((lv.damage_scale || 1) - 1.0) < 0.01) {
-        setSkillManual((p) => ({ ...p, damage_scale_pct: s }));
-      } else {
-        setSkillManual((p) => ({ ...p, scale_to_2: s }));
-      }
-    }
-    // 造成攻击力% (damage_scale ≠ 1.0 且不同于 secondary_scale)
-    if (lv.damage_scale && Math.abs(lv.damage_scale - 1.0) > 0.01 && (!lv.secondary_scale || Math.abs(lv.damage_scale - lv.secondary_scale) > 0.01)) {
-      setSkillManual((p) => ({ ...p, damage_scale_pct: Math.round(lv.damage_scale * 100) }));
-    }
-    // 攻速、HP、DEF → 填入技能参数（非手填加成）
-    if (lv.attack_speed && Math.abs(lv.attack_speed) > 0.1) {
-      setSkillManual((p) => ({ ...p, aspd: Math.round(lv.attack_speed) }));
-    }
-    if (lv.hp_pct && Math.abs(lv.hp_pct) > 0.001) {
-      setSkillManual((p) => ({ ...p, hp_pct: Math.round(lv.hp_pct * 100) }));
-    }
-    if (lv.def_pct && Math.abs(lv.def_pct) > 0.001) {
-      setSkillManual((p) => ({ ...p, def_pct: Math.round(lv.def_pct * 100) }));
-    }
+    const autofill = skillAutofill(operatorSkills, selectedSkillId, selectedSkillLevel);
+    if (!autofill) return;
+    setSkillManual((previous) => ({ ...previous, ...autofill.skill }));
+    setEnemyManual((previous) => ({ ...previous, ...autofill.enemy }));
   }, [selectedSkillId, selectedSkillLevel, operatorSkills]);
 
   function onSelectedRelicsChange(ids: string[]) {
@@ -381,7 +343,7 @@ export default function PanelPage() {
     }));
   }
 
-  function getPersistState() {
+  function getPersistState(): PanelPersistedState {
     const formVals = form.getFieldsValue();
     return {
       operatorId,
@@ -407,26 +369,11 @@ export default function PanelPage() {
     };
   }
 
+  const { load: loadPersistedState, save: savePersistedState } =
+    usePanelPersistence(getPersistState);
   const doSave = useCallback(() => {
-    const s = getPersistState();
-    stateRef.current = s;
-    savePanelState(s).catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    operatorId, enemyId, theme, equivalentGrade, selectedRelics,
-    relicConditions, sharedGold, applyOuterBuff, manualBonus,
-    skillManual, enemyManual, damageType, moduleId, moduleLevel,
-  ]);
-
-  // beforeunload 兜底保存
-  useEffect(() => {
-    const handler = () => {
-      const blob = new Blob([JSON.stringify(stateRef.current)], { type: "application/json" });
-      navigator.sendBeacon("/api/v1/knowledge/panel-state", blob);
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, []);
+    void savePersistedState().catch(() => {});
+  }, [savePersistedState]);
 
   async function runCalc() {
     if (!operatorId && !enemyId) {
@@ -467,10 +414,20 @@ export default function PanelPage() {
           hp_pct: (skillManual.hp_pct || 0) / 100,
           def_pct: (skillManual.def_pct || 0) / 100,
           aspd: skillManual.aspd || 0,
+          res_flat: skillManual.res_flat || 0,
+          res_pct: (skillManual.res_pct || 0) / 100,
           atk_scale_to: scaleTo,
           damage_scale_pct: skillManual.damage_scale_pct ?? 100,
         },
         enemy_manual: {
+          hp_pct: (enemyManual.hp_pct || 0) / 100,
+          hp_flat: enemyManual.hp_flat || 0,
+          atk_pct: (enemyManual.atk_pct || 0) / 100,
+          atk_flat: enemyManual.atk_flat || 0,
+          def_pct: (enemyManual.def_pct || 0) / 100,
+          def_flat: enemyManual.def_flat || 0,
+          res_pct: (enemyManual.res_pct || 0) / 100,
+          res_flat: enemyManual.res_flat || 0,
           ignore_def_pct: (enemyManual.ignore_def_pct || 0) / 100,
           ignore_res: enemyManual.ignore_res || 0,
           phys_damage_taken_pct: (enemyManual.phys_damage_taken_pct || 0) / 100,
@@ -482,114 +439,12 @@ export default function PanelPage() {
       });
       setResult(data);
       doSave();
-    } catch (e: any) {
-      message.error(e?.response?.data?.detail || e.message || "计算失败");
+    } catch (error: unknown) {
+      message.error(errorMessage(error, "计算失败"));
     } finally {
       setLoading(false);
     }
   }
-
-  const compareRows = result?.final_panel
-    ? [
-        {
-          key: "hp",
-          name: "生命",
-          base: Number(result.base_panel?.hp).toFixed(0),
-          final: Number(result.final_panel?.hp).toFixed(0),
-        },
-        {
-          key: "atk",
-          name: "攻击",
-          base: Number(result.base_panel?.atk).toFixed(1),
-          final: Number(result.final_panel?.atk).toFixed(1),
-        },
-        {
-          key: "def",
-          name: "防御",
-          base: Number(result.base_panel?.def).toFixed(0),
-          final: Number(result.final_panel?.def).toFixed(0),
-        },
-        {
-          key: "res",
-          name: "法抗",
-          base: Number(result.base_panel?.res).toFixed(1),
-          final: Number(result.final_panel?.res).toFixed(1),
-        },
-        {
-          key: "aspd",
-          name: "攻速",
-          base: Number(result.base_panel?.attack_speed).toFixed(1),
-          final: Number(result.final_panel?.attack_speed).toFixed(1),
-        },
-        {
-          key: "interval",
-          name: "攻击间隔(s)",
-          base: Number(result.base_panel?.attack_interval).toFixed(3),
-          final: Number(result.final_panel?.attack_interval).toFixed(3),
-        },
-        {
-          key: "dmg",
-          name: "伤害加成",
-          base: "—",
-          final: `${((Number(result.final_panel?.damage_pct) || 0) * 100).toFixed(1)}%`,
-        },
-      ]
-    : [];
-
-  const relicBonusText = result?.bonus
-    ? [
-        result.bonus.atk_pct_from_relics
-          ? `藏品攻击+${(Number(result.bonus.atk_pct_from_relics) * 100).toFixed(1)}%`
-          : "",
-        result.bonus.aspd_from_relics ? `藏品攻速+${Number(result.bonus.aspd_from_relics).toFixed(1)}` : "",
-        result.bonus.atk_pct_from_conditions
-          ? `条件攻击+${(Number(result.bonus.atk_pct_from_conditions) * 100).toFixed(1)}%`
-          : "",
-        result.bonus.aspd_from_conditions
-          ? `条件攻速+${Number(result.bonus.aspd_from_conditions).toFixed(1)}`
-          : "",
-        result.bonus.apply_outer_buff && result.bonus.atk_pct_from_outer
-          ? `局外攻击+${(Number(result.bonus.atk_pct_from_outer) * 100).toFixed(1)}%`
-          : "",
-        result.bonus.atk_pct_from_manual
-          ? `手填攻击+${(Number(result.bonus.atk_pct_from_manual) * 100).toFixed(1)}%`
-          : "",
-        result.bonus.enemy_atk_pct_from_relics
-          ? `敌人攻击${(Number(result.bonus.enemy_atk_pct_from_relics) * 100).toFixed(1)}%`
-          : "",
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : "";
-
-  const enemyRows = result?.enemy_final_panel
-    ? [
-        { key: "hp", name: "生命",
-          base: result.enemy_base_panel ? Number(result.enemy_base_panel.hp).toFixed(0) : "-",
-          diff: result.enemy_diff_panel ? Number(result.enemy_diff_panel.hp).toFixed(0) : "-",
-          final: Number(result.enemy_final_panel.hp).toFixed(0) },
-        { key: "atk", name: "攻击",
-          base: result.enemy_base_panel ? Number(result.enemy_base_panel.atk).toFixed(1) : "-",
-          diff: result.enemy_diff_panel ? Number(result.enemy_diff_panel.atk).toFixed(1) : "-",
-          final: Number(result.enemy_final_panel.atk).toFixed(1) },
-        { key: "def", name: "防御",
-          base: result.enemy_base_panel ? Number(result.enemy_base_panel.def).toFixed(0) : "-",
-          diff: result.enemy_diff_panel ? Number(result.enemy_diff_panel.def).toFixed(0) : "-",
-          final: Number(result.enemy_final_panel.def).toFixed(0) },
-        { key: "res", name: "法抗",
-          base: result.enemy_base_panel ? Number(result.enemy_base_panel.magic_resistance).toFixed(1) : "-",
-          diff: result.enemy_diff_panel ? Number(result.enemy_diff_panel.magic_resistance).toFixed(1) : "-",
-          final: Number(result.enemy_final_panel.magic_resistance).toFixed(1) },
-        { key: "aspd", name: "攻速",
-          base: result.enemy_base_panel ? Number(result.enemy_base_panel.attack_speed).toFixed(1) : "-",
-          diff: result.enemy_diff_panel ? Number(result.enemy_diff_panel.attack_speed).toFixed(1) : "-",
-          final: Number(result.enemy_final_panel.attack_speed).toFixed(1) },
-        { key: "dtype", name: "伤害类型",
-          base: "-",
-          diff: "-",
-          final: result.enemy_final_panel.damage_type || "-" },
-      ]
-    : [];
 
   return (
     <>
@@ -655,7 +510,7 @@ export default function PanelPage() {
                       disabled={!operator}
                       onChange={(v) => {
                         setModuleId(v);
-                        const m = (operator?.modules || []).find((x: any) => x.id === v);
+                        const m = (operator?.modules || []).find((x) => x.id === v);
                         setModuleLevel(m?.max_level || 3);
                       }}
                     />
@@ -679,8 +534,8 @@ export default function PanelPage() {
                 <Paragraph type="secondary" style={{ marginTop: -8, marginBottom: 8, fontSize: 13 }}>
                   模组效果：
                   {selectedModule.levels
-                    ?.filter((l: any) => l.level === moduleLevel)
-                    .map((l: any) => {
+                    ?.filter((l) => l.level === moduleLevel)
+                    .map((l) => {
                       const parts = [];
                       if (l.atk) parts.push(`ATK+${l.atk}`);
                       if (l.atk_pct) parts.push(`ATK+${(l.atk_pct * 100).toFixed(0)}%`);
@@ -694,8 +549,8 @@ export default function PanelPage() {
               {!!operator?.talents?.length && (
                 <div style={{ marginBottom: 8, fontSize: 13, color: "var(--muted)" }}>
                   {operator.talents
-                    .filter((t: any) => t.potential_rank === 0 && t.name)
-                    .map((t: any, i: number) => (
+                    .filter((t) => t.potential_rank === 0 && t.name)
+                    .map((t, i: number) => (
                       <div key={i}>
                         天赋{i + 1}：{t.name}
                         {t.description ? ` — ${t.description}` : ""}
@@ -744,6 +599,7 @@ export default function PanelPage() {
                   </Row>
                 </>
               )}
+              <SkillManualSection value={skillManual} onChange={setSkillManual} />
 
               <Divider>局外与手填加成</Divider>
               <Form.Item
@@ -794,87 +650,9 @@ export default function PanelPage() {
                 </Col>
               </Row>
 
-              <Divider>技能 / 伤害手填</Divider>
-              <Paragraph type="secondary" style={{ marginBottom: 8 }}>
-                「攻击力+X%」为直接乘算（与藏品ATK%加算）；多个「提升至」相乘。例：维什戴尔专三填攻击+180、提升至125与220。
-              </Paragraph>
-              <Row gutter={12}>
-                <Col span={6}>
-                  <Form.Item label="技能攻击力+%">
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      min={0}
-                      value={skillManual.atk_pct}
-                      onChange={(v) => setSkillManual((p) => ({ ...p, atk_pct: Number(v) || 0 }))}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="技能生命+%">
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      min={0}
-                      value={skillManual.hp_pct}
-                      onChange={(v) => setSkillManual((p) => ({ ...p, hp_pct: Number(v) || 0 }))}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="技能防御+%">
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      min={0}
-                      value={skillManual.def_pct}
-                      onChange={(v) => setSkillManual((p) => ({ ...p, def_pct: Number(v) || 0 }))}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="技能攻速">
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      value={skillManual.aspd}
-                      onChange={(v) => setSkillManual((p) => ({ ...p, aspd: Number(v) || 0 }))}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={12}>
-                <Col span={6}>
-                  <Form.Item label="提升至%（天赋）">
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      min={0}
-                      placeholder="如 125"
-                      value={skillManual.scale_to_1 || undefined}
-                      onChange={(v) => setSkillManual((p) => ({ ...p, scale_to_1: Number(v) || 0 }))}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="提升至%（技能）">
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      min={0}
-                      placeholder="如 220"
-                      value={skillManual.scale_to_2 || undefined}
-                      onChange={(v) => setSkillManual((p) => ({ ...p, scale_to_2: Number(v) || 0 }))}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="造成攻击力%">
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      min={0}
-                      value={skillManual.damage_scale_pct ?? undefined}
-                      onChange={(v) =>
-                        setSkillManual((p) => ({ ...p, damage_scale_pct: v === null || v === undefined ? null : Number(v) }))
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
+              <EnemyStatsSection value={enemyManual} onChange={setEnemyManual} />
+
+              <Divider>伤害结算</Divider>
               <Row gutter={12}>
                 <Col span={8}>
                   <Form.Item label="伤害类型">
@@ -931,7 +709,6 @@ export default function PanelPage() {
                   >
                     <InputNumber
                       style={{ width: "100%" }}
-                      min={0}
                       value={
                         damageType === "PHYS"
                           ? enemyManual.phys_damage_taken_pct
@@ -1044,72 +821,7 @@ export default function PanelPage() {
         </div>
 
         <div className="panel-page-right">
-          <Card className="panel" title="计算结果">
-            {!result && <Paragraph className="muted">配置后点击计算。</Paragraph>}
-            {result && (
-              <Space direction="vertical" style={{ width: "100%" }} size="middle">
-                {result.hit_damage != null && (
-                  <Text strong style={{ fontSize: 18 }}>
-                    单次伤害：{Number(result.hit_damage).toFixed(1)}
-                  </Text>
-                )}
-                {!!(result.relics_applied?.length || relicBonusText) && (
-                  <Text type="secondary">
-                    {result.relics_applied?.length
-                      ? `已应用藏品：${(result.relics_applied || []).map((r: any) => r.name || r.id).join("、")}`
-                      : ""}
-                    {relicBonusText ? `（${relicBonusText}）` : ""}
-                  </Text>
-                )}
-                {result.final_panel && (
-                  <>
-                    <Text>
-                      干员：{result.operator?.name}
-                      {result.module ? ` · 模组 ${result.module.name} Lv${result.module.level}` : ""}
-                    </Text>
-                    <Table
-                      size="small"
-                      pagination={false}
-                      dataSource={compareRows}
-                      columns={[
-                        { title: "属性", dataIndex: "name" },
-                        { title: "基础(含模组)", dataIndex: "base" },
-                        { title: "战斗面板", dataIndex: "final" },
-                      ]}
-                    />
-                  </>
-                )}
-                {result.enemy_final_panel && (
-                  <>
-                    <Text>
-                      敌人：{result.enemy?.name}
-                      {result.enemy?.enemy_level ? ` · ${result.enemy.enemy_level}` : ""}
-                      {result.config?.theme_id ? ` · 等效难度Lv${result.config.equivalent_grade ?? 0}` : ""}
-                    </Text>
-                    <Table
-                      size="small"
-                      pagination={false}
-                      dataSource={enemyRows}
-                      columns={[
-                        { title: "属性", dataIndex: "name", width: 80 },
-                        { title: "基础", dataIndex: "base", width: 90 },
-                        { title: "难度修正", dataIndex: "diff", width: 90 },
-                        { title: "最终", dataIndex: "final", width: 90 },
-                      ]}
-                    />
-                  </>
-                )}
-                <div>
-                  <Text strong>计算过程</Text>
-                  <div className="result-steps">
-                    {(result.steps || []).map((s: string, i: number) => (
-                      <div key={i}>{s}</div>
-                    ))}
-                  </div>
-                </div>
-              </Space>
-            )}
-          </Card>
+          <PanelResultCard result={result} />
         </div>
       </div>
 

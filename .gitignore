@@ -30,6 +30,15 @@ scripts/_mysql_bootstrap.sql
 # Node
 frontend/node_modules/
 frontend/dist/
+frontend/tsconfig.tsbuildinfo
+
+# Local agent settings and generated audit output
+.claude/
+reports/
+
+# One-off local probes/migrations
+scripts/_cursor_migrate.ps1
+scripts/_probe_*.py
 
 # IDE
 .idea/

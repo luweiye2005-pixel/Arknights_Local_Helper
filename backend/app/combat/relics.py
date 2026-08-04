@@ -98,31 +98,13 @@ def safe_eval_expr(expr: str, variables: dict[str, float]) -> float:
 
 
 def load_relic_conditions() -> dict[str, dict]:
-    path = settings.relic_conditions_path
-    if not path.exists():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            return {}
-        return {k: v for k, v in data.items() if not str(k).startswith("_") and isinstance(v, dict)}
-    except Exception as e:
-        logger.warning(f"条件藏品补丁读取失败: {e}")
-        return {}
+    from app.data import db as gdb
+    return gdb.get_relic_condition_schemas()
 
 
 def load_outer_buffs() -> dict[str, dict]:
-    path = settings.outer_buffs_path
-    if not path.exists():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            return {}
-        return {k: v for k, v in data.items() if not str(k).startswith("_") and isinstance(v, dict)}
-    except Exception as e:
-        logger.warning(f"局外加成补丁读取失败: {e}")
-        return {}
+    from app.data import db as gdb
+    return gdb.get_theme_outer_buffs()
 
 
 def list_condition_schemas(theme_id: str | None = None) -> dict[str, dict]:
@@ -277,6 +259,68 @@ def build_conditional_relic_modifiers(
     return total
 
 
+def build_relic_contributions(
+    relic_ids: list[str] | None,
+    relic_conditions: dict[str, dict[str, Any]] | None = None,
+    operator: dict[str, Any] | None = None,
+    equivalent_grade: int = 0,
+) -> dict[str, Any]:
+    """Evaluate MySQL rules and retain per-relic provenance/formulas."""
+    from app.data import db as gdb
+
+    conditions = relic_conditions or {}
+    schemas = gdb.get_relic_condition_schemas()
+    grouped: dict[str, dict[str, Any]] = {"operator_panel": {}, "enemy_panel": {}}
+    conditional: list[dict[str, Any]] = []
+    damage: dict[str, list[dict[str, Any]]] = {"all": [], "PHYS": [], "MAGIC": [], "TRUE": []}
+    for base_id in relic_ids or []:
+        resolved = gdb.resolve_relic_for_grade(base_id, equivalent_grade) or gdb.get_relic_row(base_id) or {"id": base_id, "name": base_id}
+        rid, name = resolved.get("id") or base_id, resolved.get("name") or base_id
+        schema = schemas.get(base_id) or schemas.get(rid) or {}
+        params = _resolve_param_values(schema, conditions.get(base_id) or conditions.get(rid), operator=operator)
+        for rule in gdb.get_relic_rule_rows([base_id], equivalent_grade):
+            if rule.get("calculation_status") != "active" or rule.get("attr") == "ignored":
+                continue
+            when = rule.get("when_param")
+            if when and not params.get(when):
+                continue
+            value = float(rule.get("value") or 0)
+            expr = rule.get("value_expr")
+            if expr:
+                try:
+                    value = safe_eval_expr(str(expr), params)
+                except Exception:
+                    continue
+            item = {
+                "relic_id": base_id, "resolved_id": rid, "name": name,
+                "attr": rule.get("attr"), "value": value, "operation": rule.get("operation") or "add",
+                "condition": ", ".join(f"{key}={val:g}" for key, val in params.items()) if params else None,
+                "formula": f"{expr} = {value:g}" if expr else f"{rule.get('attr')} {value:+g}",
+                "rule_version": int(rule.get("rule_version") or 1), "source": rule.get("source"),
+            }
+            attr, target = str(rule.get("attr") or ""), rule.get("target")
+            if attr in {"damage_pct", "phys_damage_pct", "arts_damage_pct", "true_damage_pct"}:
+                scope = {"phys_damage_pct": "PHYS", "arts_damage_pct": "MAGIC", "true_damage_pct": "TRUE"}.get(attr, "all")
+                item["factor"] = (1.0 + value) if (rule.get("operation") or "add") == "multiply" else (1.0 + value)
+                item["display"] = f"×{item['factor'] * 100:g}%"
+                damage[scope].append(item)
+                continue
+            bucket_name = "enemy_panel" if target == "enemy" else "operator_panel"
+            bucket = grouped[bucket_name].setdefault(attr, {"total": 0.0, "items": []})
+            bucket["total"] += value
+            item["display"] = f"{value * 100:+g}%" if attr.endswith("_pct") else f"{value:+g}"
+            bucket["items"].append(item)
+            if params:
+                conditional.append(item)
+    factors_out = {}
+    for scope, items in damage.items():
+        product = 1.0
+        for item in items:
+            product *= float(item["factor"])
+        factors_out[scope] = {"product": product, "items": items, "formula": " × ".join(item["display"] for item in items) or "×100%"}
+    return {**grouped, "conditional": conditional, "damage_factors": factors_out}
+
+
 def outer_buff_to_modifiers(buff: dict[str, Any] | None) -> CombatModifiers:
     if not buff:
         return CombatModifiers()
@@ -347,10 +391,13 @@ def parse_enemy_relic_text(name: str, usage: str) -> EnemyStatModifiers:
     text = f"{name} {usage}"
     mod = EnemyStatModifiers()
 
-    # 复合：攻击力、防御力、生命+40% —— 先吃掉，避免后续单项重复
     def _blank(m: re.Match[str]) -> str:
         return " " * (m.end() - m.start())
 
+    # 情境句先挖掉，避免当成常驻
+    text = re.sub(r"处于[^，。；\n]{0,24}(?:时|中)的?敌人[^。；\n]{0,40}", " ", text)
+
+    # 复合：攻击力、防御力、生命+40% —— 先吃掉，避免后续单项重复
     for m in list(
         re.finditer(
             rf"{_ENEMY}的?(?:攻击力|攻击)[、,，](?:防御力|防御)[、,，](?:生命值|生命)\s*{_SIGN_NUM}\s*%",
@@ -478,6 +525,8 @@ def build_enemy_relic_modifiers(
     *,
     relic_ids: list[str] | None = None,
     equivalent_grade: int = 0,
+    relic_conditions: dict[str, dict[str, Any]] | None = None,
+    operator: dict[str, Any] | None = None,
 ) -> EnemyStatModifiers:
     """合并藏品对敌人面板的修正：逐件读 DB，并用文本解析补齐。"""
     from app.data import db as gdb
@@ -487,21 +536,40 @@ def build_enemy_relic_modifiers(
     if not ids:
         return total
 
+    schemas = gdb.get_relic_condition_schemas()
     for rid in ids:
-        resolved = gdb.resolve_relic_for_grade(rid, equivalent_grade) or gdb.get_relic_row(rid)
+        # MySQL is an optional enrichment source for panel calculation.  Keep the
+        # calculator usable with local gamedata (and unit-testable) when the
+        # database is unavailable or not configured yet.
+        try:
+            resolved = gdb.resolve_relic_for_grade(rid, equivalent_grade) or gdb.get_relic_row(rid)
+        except Exception as e:
+            raise RuntimeError(f"MySQL 藏品规则不可用: {rid}: {e}") from e
         if not resolved:
             continue
         resolved_id = resolved.get("id") or rid
         name = resolved.get("name") or resolved_id
         usage = resolved.get("usage") or resolved.get("usage_text") or ""
         piece = EnemyStatModifiers()
+        schema = schemas.get(rid) or schemas.get(resolved_id) or {}
+        params = _resolve_param_values(schema, (relic_conditions or {}).get(rid), operator=operator)
         try:
-            rows = gdb.get_relic_effects_merged([rid], equivalent_grade=equivalent_grade)
-            piece = enemy_modifiers_from_effect_rows(rows)
+            rows = gdb.get_relic_rule_rows([rid], equivalent_grade)
         except Exception as e:
-            logger.warning(f"读敌人藏品效果失败 {resolved_id}: {e}")
-        text_piece = parse_enemy_relic_text(name, usage)
-        piece = _fill_enemy_mod_gaps(piece, text_piece)
+            raise RuntimeError(f"MySQL 敌人藏品规则不可用: {resolved_id}: {e}") from e
+        for row in rows:
+            if row.get("target") != "enemy" or row.get("calculation_status") != "active":
+                continue
+            when = row.get("when_param")
+            if when and not params.get(when):
+                continue
+            value = float(row.get("value") or 0)
+            if row.get("value_expr"):
+                value = safe_eval_expr(str(row["value_expr"]), params)
+            attr = row.get("attr")
+            if attr in {"hp_pct", "atk_pct", "def_pct", "aspd", "res_flat"}:
+                setattr(piece, attr, getattr(piece, attr) + value)
+                piece.notes.append(str(row.get("note") or name))
         if _enemy_mod_has_values(piece):
             total = total.merge(piece)
             total.notes.append(f"应用遗物(敌):{name}")
@@ -525,46 +593,78 @@ def parse_relic_text(name: str, usage: str) -> CombatModifiers:
     text = f"{name} {usage}"
     mod = CombatModifiers()
 
-    # 复合：攻击力和防御力+35%
-    for m in re.finditer(
-        r"(?:攻击力|攻击)和(?:防御力|防御)[^%]{0,6}(?:提升|增加|\+|加)\s*(\d+(?:\.\d+)?)\s*%",
+    def _blank(m: re.Match[str]) -> str:
+        return " " * (m.end() - m.start())
+
+    # 挖掉情境/概率句，降低误解析常驻面板
+    text = re.sub(
+        r"(?:每次攻击时|攻击时|部署后|技能期间|持有时若|若当前|当[^，。]{0,12}时)[^。；\n]{0,48}",
+        " ",
         text,
+    )
+    text = re.sub(r"处于[^，。；\n]{0,24}(?:时|中)[^。；\n]{0,40}", " ", text)
+    ally = r"(?:所有)?(?:我方单位|干员|友方单位)"
+
+    # 复合：攻击力和防御力+35%
+    for m in list(
+        re.finditer(
+            rf"(?:{ally}的?)?(?:攻击力|攻击)和(?:防御力|防御)[^%]{{0,6}}(?:提升|增加|\+|加)\s*(\d+(?:\.\d+)?)\s*%",
+            text,
+        )
     ):
         pct = float(m.group(1)) / 100.0
         mod.atk_pct += pct
         mod.def_pct += pct
         mod.notes.append(f"解析攻防%+{m.group(1)}%")
-        text = text[: m.start()] + (" " * (m.end() - m.start())) + text[m.end() :]
+        text = text[: m.start()] + _blank(m) + text[m.end() :]
 
-    for m in re.finditer(r"(?:攻击力|攻击)[^%]{0,8}(?:提升|增加|\+|加)\s*(\d+(?:\.\d+)?)\s*%", text):
+    for m in re.finditer(
+        rf"(?:{ally}的?)?(?:攻击力|攻击)[^%]{{0,8}}(?:提升|增加|\+|加)\s*(\d+(?:\.\d+)?)\s*%",
+        text,
+    ):
+        start = max(0, m.start() - 6)
+        if "敌人" in text[start : m.start()] or "敌方" in text[start : m.start()]:
+            continue
         mod.atk_pct += float(m.group(1)) / 100.0
         mod.notes.append(f"解析ATK%+{m.group(1)}%")
 
-    for m in re.finditer(r"(?:最大生命|生命值|生命)[^%]{0,8}(?:提升|增加|\+|加)\s*(\d+(?:\.\d+)?)\s*%", text):
-        start = max(0, m.start() - 4)
-        prefix = text[start : m.start()]
-        if "敌人" in prefix or "敌方" in prefix:
+    for m in re.finditer(
+        rf"(?:{ally}的?)?(?:最大生命|生命值|生命)[^%]{{0,8}}(?:提升|增加|\+|加)\s*(\d+(?:\.\d+)?)\s*%",
+        text,
+    ):
+        start = max(0, m.start() - 6)
+        if "敌人" in text[start : m.start()] or "敌方" in text[start : m.start()]:
             continue
         mod.hp_pct += float(m.group(1)) / 100.0
         mod.notes.append(f"解析HP%+{m.group(1)}%")
 
-    for m in re.finditer(r"(?:防御力|防御)[^%]{0,8}(?:提升|增加|\+|加)\s*(\d+(?:\.\d+)?)\s*%", text):
-        start = max(0, m.start() - 4)
-        prefix = text[start : m.start()]
-        if "敌人" in prefix or "敌方" in prefix:
+    for m in re.finditer(
+        rf"(?:{ally}的?)?(?:防御力|防御)[^%]{{0,8}}(?:提升|增加|\+|加)\s*(\d+(?:\.\d+)?)\s*%",
+        text,
+    ):
+        start = max(0, m.start() - 6)
+        if "敌人" in text[start : m.start()] or "敌方" in text[start : m.start()]:
             continue
         mod.def_pct += float(m.group(1)) / 100.0
         mod.notes.append(f"解析DEF%+{m.group(1)}%")
 
     for m in re.finditer(r"(?:造成的?伤害|伤害)[^%]{0,8}(?:提升|增加|\+)\s*(\d+(?:\.\d+)?)\s*%", text):
-        # 「物理伤害/法术伤害」由下方专项解析，避免重复计入 damage_pct
         span = text[max(0, m.start() - 4) : m.end()]
         if "物理伤害" in span or "法术伤害" in span:
+            continue
+        start = max(0, m.start() - 6)
+        if "敌人" in text[start : m.start()] or "敌方" in text[start : m.start()]:
             continue
         mod.damage_pct += float(m.group(1)) / 100.0
         mod.notes.append(f"解析伤害%+{m.group(1)}%")
 
-    for m in re.finditer(r"(?:攻击速度|攻速)[^%]{0,6}(?:提升|增加|\+)\s*(\d+(?:\.\d+)?)", text):
+    for m in re.finditer(
+        rf"(?:{ally}的?)?(?:攻击速度|攻速)[^%]{{0,6}}(?:提升|增加|\+)\s*(\d+(?:\.\d+)?)",
+        text,
+    ):
+        start = max(0, m.start() - 6)
+        if "敌人" in text[start : m.start()] or "敌方" in text[start : m.start()]:
+            continue
         mod.aspd += float(m.group(1))
         mod.notes.append(f"解析攻速+{m.group(1)}")
 
@@ -605,7 +705,7 @@ def parse_relic_text(name: str, usage: str) -> CombatModifiers:
         mod.ignore_def_pct += float(m.group(1)) / 100.0
         mod.notes.append(f"解析无视防御{m.group(1)}%")
 
-    if "真实伤害" in text or "真伤" in text:
+    if re.search(r"(?:攻击|造成|变为|附带)[^。；\n]{0,12}(?:真实伤害|真伤)", text) and "受到真实伤害" not in text:
         mod.true_damage = True
         mod.notes.append("解析真伤")
 
@@ -701,27 +801,18 @@ def build_relic_modifiers(
 
     ids = relic_ids or [r.get("id") for r in (relics or []) if r.get("id")]
     ids = [i for i in ids if i]
-    patches = load_relic_patches()
     total = CombatModifiers()
 
     if not ids:
-        for r in relics or []:
-            rid = r.get("id") or ""
-            schema = _condition_schema_for(rid)
-            if schema and schema.get("replace_operator_panel", True):
-                total.notes.append(f"条件藏品跳过常驻面板:{r.get('name') or rid}")
-                continue
-            if rid in patches:
-                total = total.merge(_normalize_damage_amps(modifiers_from_patch(patches[rid])))
-            else:
-                total = total.merge(
-                    _normalize_damage_amps(parse_relic_text(r.get("name") or "", r.get("usage") or ""))
-                )
-            total.notes.append(f"应用遗物:{r.get('name') or rid}")
         return total
 
     for rid in ids:
-        resolved = gdb.resolve_relic_for_grade(rid, equivalent_grade) or gdb.get_relic_row(rid)
+        # The structured database improves accuracy but is not required for
+        # offline/local calculation; fall back to the supplied relic text.
+        try:
+            resolved = gdb.resolve_relic_for_grade(rid, equivalent_grade) or gdb.get_relic_row(rid)
+        except Exception as e:
+            raise RuntimeError(f"MySQL 藏品规则不可用: {rid}: {e}") from e
         from_list = next((r for r in (relics or []) if r.get("id") == rid), None)
         name = (resolved or {}).get("name") or (from_list or {}).get("name") or rid
         usage = (resolved or {}).get("usage") or (from_list or {}).get("usage") or ""
@@ -734,9 +825,7 @@ def build_relic_modifiers(
                 rows = gdb.get_relic_effects_merged([rid], equivalent_grade=equivalent_grade)
                 piece = _strip_operator_panel_attrs(modifiers_from_effect_rows(rows))
             except Exception as e:
-                logger.warning(f"从 MySQL 读 relic_effects 失败 {rid}: {e}")
-            if usage:
-                piece = _fill_mod_gaps(piece, parse_relic_text(name, usage))
+                raise RuntimeError(f"MySQL 藏品规则不可用: {rid}: {e}") from e
             piece = _normalize_damage_amps(piece)
             if not any(
                 [
@@ -758,18 +847,7 @@ def build_relic_modifiers(
             rows = gdb.get_relic_effects_merged([rid], equivalent_grade=equivalent_grade)
             piece = modifiers_from_effect_rows(rows)
         except Exception as e:
-            logger.warning(f"从 MySQL 读 relic_effects 失败 {rid}: {e}")
-
-        if not _mod_has_values(piece):
-            if rid in patches:
-                piece = modifiers_from_patch(patches[rid])
-            elif resolved_id in patches:
-                piece = modifiers_from_patch(patches[resolved_id])
-            else:
-                piece = parse_relic_text(name, usage)
-        else:
-            # DB 可能只有部分字段（旧导入），用当前文本解析补齐生命/防御等
-            piece = _fill_mod_gaps(piece, parse_relic_text(name, usage))
+            raise RuntimeError(f"MySQL 藏品规则不可用: {rid}: {e}") from e
 
         piece = _normalize_damage_amps(piece)
         if _mod_has_values(piece):

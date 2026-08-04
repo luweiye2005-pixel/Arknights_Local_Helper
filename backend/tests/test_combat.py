@@ -108,7 +108,10 @@ def test_build_modifiers_merge():
     with (
         patch("app.data.db.resolve_relic_for_grade", return_value=None),
         patch("app.data.db.get_relic_row", side_effect=lambda rid: next(r for r in relics if r["id"] == rid)),
-        patch("app.data.db.get_relic_effects_merged", return_value=[]),
+        patch("app.data.db.get_relic_effects_merged", side_effect=[
+            [{"target": "operator", "attr": "atk_pct", "value": 0.1}],
+            [{"target": "operator", "attr": "damage_pct", "value": 0.15}],
+        ]),
     ):
         m = build_relic_modifiers(relics=relics, relic_ids=["a", "b"])
     assert abs(m.atk_pct - 0.1) < 1e-6

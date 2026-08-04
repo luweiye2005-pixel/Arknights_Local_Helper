@@ -74,6 +74,38 @@ CREATE TABLE IF NOT EXISTS operator_favor_stats (
   CONSTRAINT fk_favor_op FOREIGN KEY (operator_id) REFERENCES operators(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS operator_skills (
+  operator_id VARCHAR(64) NOT NULL,
+  skill_id VARCHAR(128) NOT NULL,
+  skill_index TINYINT NOT NULL DEFAULT 0,
+  unlock_elite TINYINT NOT NULL DEFAULT 0,
+  unlock_level INT NOT NULL DEFAULT 1,
+  max_level TINYINT NOT NULL DEFAULT 1,
+  PRIMARY KEY (operator_id, skill_id),
+  KEY idx_os_operator_order (operator_id, skill_index),
+  CONSTRAINT fk_os_operator FOREIGN KEY (operator_id) REFERENCES operators(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS operator_skill_levels (
+  operator_id VARCHAR(64) NOT NULL,
+  skill_id VARCHAR(128) NOT NULL,
+  level TINYINT NOT NULL,
+  name VARCHAR(128) NULL,
+  description TEXT NULL,
+  duration DOUBLE NOT NULL DEFAULT 0,
+  skill_type VARCHAR(32) NULL,
+  prefab_id VARCHAR(128) NULL,
+  sp_cost DOUBLE NULL,
+  sp_init DOUBLE NULL,
+  blackboard JSON NULL,
+  sp_data JSON NULL,
+  parsed_effects JSON NOT NULL,
+  PRIMARY KEY (operator_id, skill_id, level),
+  KEY idx_osl_skill (skill_id, level),
+  CONSTRAINT fk_osl_skill FOREIGN KEY (operator_id, skill_id)
+    REFERENCES operator_skills(operator_id, skill_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS modules (
   id VARCHAR(64) PRIMARY KEY,
   operator_id VARCHAR(64) NOT NULL,
@@ -169,6 +201,60 @@ CREATE TABLE IF NOT EXISTS relic_effects (
   CONSTRAINT fk_re_relic FOREIGN KEY (relic_id) REFERENCES relics(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS relic_effect_rules (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  relic_id VARCHAR(64) NOT NULL,
+  target VARCHAR(32) NOT NULL DEFAULT 'operator',
+  attr VARCHAR(64) NOT NULL,
+  operation VARCHAR(16) NOT NULL DEFAULT 'add',
+  value DOUBLE NOT NULL DEFAULT 0,
+  value_expr VARCHAR(255) NULL,
+  when_param VARCHAR(64) NULL,
+  damage_type VARCHAR(16) NULL,
+  calculation_status VARCHAR(16) NOT NULL DEFAULT 'active',
+  ignored_reason VARCHAR(255) NULL,
+  source VARCHAR(16) NOT NULL DEFAULT 'parsed',
+  rule_version INT NOT NULL DEFAULT 1,
+  review_status VARCHAR(16) NOT NULL DEFAULT 'pending',
+  display_order INT NOT NULL DEFAULT 0,
+  note VARCHAR(255) NULL,
+  reviewed_at DATETIME NULL,
+  UNIQUE KEY uk_relic_rule (relic_id,target,attr,operation,display_order),
+  KEY idx_rer_relic (relic_id),
+  CONSTRAINT fk_rer_relic FOREIGN KEY (relic_id) REFERENCES relics(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS relic_condition_params (
+  relic_id VARCHAR(64) NOT NULL,
+  param_id VARCHAR(64) NOT NULL,
+  param_type VARCHAR(16) NOT NULL DEFAULT 'number',
+  label VARCHAR(255) NOT NULL,
+  default_value DOUBLE NOT NULL DEFAULT 0,
+  min_value DOUBLE NULL,
+  max_value DOUBLE NULL,
+  step_value DOUBLE NULL,
+  unit VARCHAR(16) NULL,
+  auto_rule JSON NULL,
+  display_order INT NOT NULL DEFAULT 0,
+  rule_version INT NOT NULL DEFAULT 1,
+  review_status VARCHAR(16) NOT NULL DEFAULT 'pending',
+  PRIMARY KEY (relic_id,param_id),
+  CONSTRAINT fk_rcp_relic FOREIGN KEY (relic_id) REFERENCES relics(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS theme_outer_buffs (
+  theme_id VARCHAR(32) PRIMARY KEY,
+  name VARCHAR(128) NULL,
+  atk_pct DOUBLE NOT NULL DEFAULT 0,
+  hp_pct DOUBLE NOT NULL DEFAULT 0,
+  def_pct DOUBLE NOT NULL DEFAULT 0,
+  aspd DOUBLE NOT NULL DEFAULT 0,
+  note VARCHAR(255) NULL,
+  rule_version INT NOT NULL DEFAULT 1,
+  review_status VARCHAR(16) NOT NULL DEFAULT 'approved',
+  CONSTRAINT fk_tob_theme FOREIGN KEY (theme_id) REFERENCES themes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS relic_upgrade_groups (
   group_id VARCHAR(128) PRIMARY KEY,
   theme_id VARCHAR(32) NOT NULL,
@@ -189,10 +275,20 @@ CREATE TABLE IF NOT EXISTS relic_upgrade_steps (
 CREATE TABLE IF NOT EXISTS operator_talents (
   operator_id VARCHAR(64) NOT NULL,
   talent_index INT NOT NULL DEFAULT 0,
+  unlock_elite TINYINT NOT NULL DEFAULT 0,
   name VARCHAR(128) NOT NULL DEFAULT '',
   description TEXT NULL,
   potential_rank INT NOT NULL DEFAULT 0,
   blackboard JSON NULL,
-  PRIMARY KEY (operator_id, talent_index, potential_rank),
+  PRIMARY KEY (operator_id, talent_index, unlock_elite, potential_rank),
   CONSTRAINT fk_talent_op FOREIGN KEY (operator_id) REFERENCES operators(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS operator_potential_buffs (
+  operator_id VARCHAR(64) NOT NULL,
+  rank_index TINYINT NOT NULL,
+  attr VARCHAR(32) NOT NULL,
+  value DOUBLE NOT NULL DEFAULT 0,
+  PRIMARY KEY (operator_id, rank_index, attr),
+  CONSTRAINT fk_pot_op FOREIGN KEY (operator_id) REFERENCES operators(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

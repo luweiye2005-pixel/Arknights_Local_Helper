@@ -8,6 +8,7 @@ from app.combat.engine import attack_interval, resolve_hit_from_panels
 from app.combat.relics import (
     build_conditional_relic_modifiers,
     build_enemy_relic_modifiers,
+    build_relic_contributions,
     build_relic_modifiers,
     get_outer_buff,
     manual_bonus_to_modifiers,
@@ -44,6 +45,8 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
     skill_hp_pct = float(skill_manual.get("hp_pct") or 0)
     skill_def_pct = float(skill_manual.get("def_pct") or 0)
     skill_aspd = float(skill_manual.get("aspd") or 0)
+    skill_res_flat = float(skill_manual.get("res_flat") or 0)
+    skill_res_pct = float(skill_manual.get("res_pct") or 0)
 
     relic_ids = list(payload.get("relic_ids") or [])
     relics_applied = []
@@ -92,6 +95,7 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         "hit_damage": None,
         "hit_detail": None,
         "relics_applied": relics_applied,
+        "relic_contributions": None,
         "outer_buff": None,
         "steps": [],
     }
@@ -107,8 +111,10 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
 
         module_atk_flat = float(payload.get("module_atk_flat") or 0)
         module_atk_pct = float(payload.get("module_atk_pct") or 0)
-        module_meta = None
+        module_hp_flat = 0.0
+        module_def_flat = 0.0
         module_aspd = 0.0
+        module_meta = None
 
         if module_id:
             chosen = next((m for m in (operator.get("modules") or []) if m.get("id") == module_id), None)
@@ -121,6 +127,8 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
                 if lv:
                     module_atk_flat += float(lv.get("atk") or 0)
                     module_atk_pct += float(lv.get("atk_pct") or 0)
+                    module_hp_flat += float(lv.get("hp") or 0)
+                    module_def_flat += float(lv.get("defense") or 0)
                     module_aspd += float(lv.get("attack_speed") or 0)
                     module_meta = {
                         "id": module_id,
@@ -142,14 +150,21 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
             potential=potential,
             module_atk_flat=module_atk_flat,
             module_atk_pct=module_atk_pct,
+            module_hp_flat=module_hp_flat,
+            module_def_flat=module_def_flat,
+            module_aspd=module_aspd,
+            apply_talents=True,
         )
-        base["attack_speed"] = float(base.get("attack_speed") or 100) + module_aspd
         base_interval = attack_interval(base["base_attack_time"], base["attack_speed"])
 
         relic_mods = build_relic_modifiers(relic_ids=relic_ids, equivalent_grade=equivalent_grade)
         cond_mods = build_conditional_relic_modifiers(
             relic_ids, relic_conditions, operator=operator
         )
+        contributions = build_relic_contributions(
+            relic_ids, relic_conditions, operator=operator, equivalent_grade=equivalent_grade
+        )
+        result["relic_contributions"] = contributions
         mods = relic_mods.merge(cond_mods)
 
         outer_raw = get_outer_buff(theme_id) if apply_outer_buff else None
@@ -165,19 +180,18 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         final_hp = base["hp"] * (1.0 + total.hp_pct + skill_hp_pct)
         final_def = base["def"] * (1.0 + total.def_pct + skill_def_pct)
         final_aspd = base["attack_speed"] + total.aspd + skill_aspd
+        final_res = float(base["res"]) * (1.0 + skill_res_pct) + skill_res_flat
         final_interval = attack_interval(base["base_attack_time"], final_aspd)
 
-        relic_dmg = total.damage_pct
-        if damage_type == "PHYS":
-            relic_dmg += total.phys_damage_pct
-        elif damage_type == "MAGIC":
-            relic_dmg += total.arts_damage_pct
+        all_factor = float(contributions["damage_factors"]["all"]["product"])
+        typed_factor = float(contributions["damage_factors"][damage_type]["product"])
+        relic_dmg = all_factor * typed_factor - 1.0
 
         final = {
             "hp": final_hp,
             "atk": combat_atk,
             "def": final_def,
-            "res": base["res"],
+            "res": final_res,
             "attack_speed": final_aspd,
             "base_attack_time": base["base_attack_time"],
             "attack_interval": final_interval,
@@ -186,6 +200,8 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
             "true_damage": total.true_damage,
             "skill_atk_pct": skill_atk_pct,
             "direct_atk_pct": direct_atk_pct,
+            "skill_res_flat": skill_res_flat,
+            "skill_res_pct": skill_res_pct,
         }
 
         result["operator"] = {
@@ -223,6 +239,8 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
                 "hp_pct_from_skill": skill_hp_pct,
                 "def_pct_from_skill": skill_def_pct,
                 "aspd_from_skill": skill_aspd,
+                "res_flat_from_skill": skill_res_flat,
+                "res_pct_from_skill": skill_res_pct,
                 "apply_outer_buff": apply_outer_buff,
                 "damage_pct": final["damage_pct"],
                 "ignore_def_pct": total.ignore_def_pct,
@@ -235,11 +253,22 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
             steps.append(
                 f"1. 模组「{module_meta.get('name')}」{module_meta.get('type')} Lv{module_meta.get('level')}："
                 f"ATK+{module_meta.get('atk')} ATK%+{float(module_meta.get('atk_pct') or 0):.0%} "
+                f"HP+{module_meta.get('hp')} DEF+{module_meta.get('defense')} "
                 f"攻速+{module_meta.get('attack_speed')}"
             )
+        pot_note = ""
+        if float(base.get("potential_atk_flat") or 0) or float(base.get("potential_hp_flat") or 0):
+            pot_note = (
+                f"（潜能定值 ATK+{float(base.get('potential_atk_flat') or 0):.0f} "
+                f"HP+{float(base.get('potential_hp_flat') or 0):.0f} "
+                f"DEF+{float(base.get('potential_def_flat') or 0):.0f}）"
+            )
+        tal_pct = float(base.get("talent_atk_pct") or 0)
+        if tal_pct:
+            pot_note += f"（天赋ATK%+{tal_pct:.0%}）"
         steps.append(
-            f"2. 养成+模组基础 ATK={base['atk']:.2f} HP={base['hp']:.0f} DEF={base['def']:.0f} "
-            f"攻速={base['attack_speed']:.1f} 间隔={base_interval:.3f}s"
+            f"2. 养成+模组+潜能/天赋基础 ATK={base['atk']:.2f} HP={base['hp']:.0f} DEF={base['def']:.0f} "
+            f"攻速={base['attack_speed']:.1f} 间隔={base_interval:.3f}s{pot_note}"
         )
         steps.append(
             f"3. 直接乘算分项：藏品ATK%={relic_mods.atk_pct:.2%} + 条件ATK%={cond_mods.atk_pct:.2%} "
@@ -249,7 +278,12 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         )
         steps.append(
             f"4. 战斗面板 ATK = {base['atk']:.2f} × (1+{direct_atk_pct:.4f}) + {total.atk_flat:.1f} "
-            f"= {combat_atk:.2f}；HP={final_hp:.0f} DEF={final_def:.0f} 攻速={final_aspd:.1f}"
+            f"= {combat_atk:.2f}；HP={final_hp:.0f} DEF={final_def:.0f} 法抗={final_res:.1f} 攻速={final_aspd:.1f}"
+        )
+
+    if result["relic_contributions"] is None:
+        result["relic_contributions"] = build_relic_contributions(
+            relic_ids, relic_conditions, operator=None, equivalent_grade=equivalent_grade
         )
 
     if enemy_id:
@@ -273,7 +307,21 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         )
         attrs = dict(enemy.get("attributes") or {}) if enemy else raw_attrs
 
-        emods = build_enemy_relic_modifiers(relic_ids=relic_ids, equivalent_grade=equivalent_grade)
+        emods = build_enemy_relic_modifiers(
+            relic_ids=relic_ids, equivalent_grade=equivalent_grade,
+            relic_conditions=relic_conditions, operator=operator if op_id else None,
+        )
+
+        # 敌人手填/技能减益面板修正
+        em = enemy_manual if isinstance(enemy_manual, dict) else {}
+        man_hp_pct = float(em.get("hp_pct") or 0)
+        man_hp_flat = float(em.get("hp_flat") or 0)
+        man_atk_pct = float(em.get("atk_pct") or 0)
+        man_atk_flat = float(em.get("atk_flat") or 0)
+        man_def_pct = float(em.get("def_pct") or 0)
+        man_def_flat = float(em.get("def_flat") or 0)
+        man_res_pct = float(em.get("res_pct") or 0)
+        man_res_flat = float(em.get("res_flat") or 0)
 
         enemy_base = {
             "hp": float(raw_attrs.get("hp") or 0),
@@ -295,11 +343,16 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
             "range_radius": float(attrs.get("range_radius") or 0),
             "damage_type": attrs.get("damage_type"),
         }
+        # 难度面板 → ×(1+藏品%+手填%) + 手填定值；法抗同理
         enemy_final = {
-            "hp": float(attrs.get("hp") or 0) * (1.0 + emods.hp_pct),
-            "atk": float(attrs.get("atk") or 0) * (1.0 + emods.atk_pct),
-            "def": float(attrs.get("def") or 0) * (1.0 + emods.def_pct),
-            "magic_resistance": float(attrs.get("magic_resistance") or 0) + emods.res_flat,
+            "hp": float(attrs.get("hp") or 0) * (1.0 + emods.hp_pct + man_hp_pct) + man_hp_flat,
+            "atk": float(attrs.get("atk") or 0) * (1.0 + emods.atk_pct + man_atk_pct) + man_atk_flat,
+            "def": float(attrs.get("def") or 0) * (1.0 + emods.def_pct + man_def_pct) + man_def_flat,
+            "magic_resistance": (
+                float(attrs.get("magic_resistance") or 0) * (1.0 + man_res_pct)
+                + emods.res_flat
+                + man_res_flat
+            ),
             "attack_speed": float(attrs.get("attack_speed") or 0) + emods.aspd,
             "move_speed": float(attrs.get("move_speed") or 0),
             "range_radius": float(attrs.get("range_radius") or 0),
@@ -319,14 +372,35 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         result["bonus"]["enemy_def_pct_from_relics"] = emods.def_pct
         result["bonus"]["enemy_aspd_from_relics"] = emods.aspd
         result["bonus"]["enemy_res_flat_from_relics"] = emods.res_flat
+        result["bonus"]["enemy_hp_pct_manual"] = man_hp_pct
+        result["bonus"]["enemy_atk_pct_manual"] = man_atk_pct
+        result["bonus"]["enemy_def_pct_manual"] = man_def_pct
+        result["bonus"]["enemy_res_pct_manual"] = man_res_pct
+        result["bonus"]["enemy_hp_flat_manual"] = man_hp_flat
+        result["bonus"]["enemy_atk_flat_manual"] = man_atk_flat
+        result["bonus"]["enemy_def_flat_manual"] = man_def_flat
+        result["bonus"]["enemy_res_flat_manual"] = man_res_flat
         result["bonus"]["enemy_difficulty_mods"] = enemy.get("difficulty_mods") or [] if enemy else []
+        diff_taken = (enemy or {}).get("damage_taken") or {}
+        result["bonus"]["enemy_damage_taken_phys_pct"] = float(diff_taken.get("phys") or 0)
+        result["bonus"]["enemy_damage_taken_arts_pct"] = float(diff_taken.get("arts") or 0)
 
         steps.append("—— 敌人面板 ——")
         steps.append(
-            f"敌人「{enemy.get('name')}」最终 "
+            f"敌人「{(enemy or enemy_raw).get('name')}」最终 "
             f"HP={enemy_final['hp']:.0f} DEF={enemy_final['def']:.0f} "
             f"RES={enemy_final['magic_resistance']:.1f}"
         )
+        if man_def_pct or man_res_pct or man_res_flat or man_atk_pct or man_hp_pct:
+            steps.append(
+                f"敌人手填/技能减益：DEF%{man_def_pct:+.0%} RES%{man_res_pct:+.0%} "
+                f"RES定值{man_res_flat:+.1f} ATK%{man_atk_pct:+.0%} HP%{man_hp_pct:+.0%}"
+            )
+        if diff_taken.get("phys") or diff_taken.get("arts"):
+            steps.append(
+                f"难度受伤修正：物伤加深{float(diff_taken.get('phys') or 0):+.0%} "
+                f"法伤加深{float(diff_taken.get('arts') or 0):+.0%}"
+            )
 
     # 干员+敌人 → 单次伤害
     if op_id and enemy_final is not None and combat_atk > 0:
@@ -334,13 +408,19 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         ignore = 0.0
         true_dmg = False
         if total_mods is not None:
-            relic_dmg = float(total_mods.damage_pct or 0)
-            if damage_type == "PHYS":
-                relic_dmg += float(total_mods.phys_damage_pct or 0)
-            elif damage_type == "MAGIC":
-                relic_dmg += float(total_mods.arts_damage_pct or 0)
+            relic_dmg = float((result.get("final_panel") or {}).get("damage_pct") or 0)
             ignore = float(total_mods.ignore_def_pct or 0)
             true_dmg = bool(total_mods.true_damage)
+
+        # 合并难度「受到伤害降低/提升」到结算乘区
+        merged_enemy_manual = dict(enemy_manual) if isinstance(enemy_manual, dict) else {}
+        diff_taken = (result.get("bonus") or {})
+        merged_enemy_manual["phys_damage_taken_pct"] = float(
+            merged_enemy_manual.get("phys_damage_taken_pct") or 0
+        ) + float(diff_taken.get("enemy_damage_taken_phys_pct") or 0)
+        merged_enemy_manual["arts_damage_taken_pct"] = float(
+            merged_enemy_manual.get("arts_damage_taken_pct") or 0
+        ) + float(diff_taken.get("enemy_damage_taken_arts_pct") or 0)
 
         hit_info = resolve_hit_from_panels(
             combat_atk,
@@ -348,7 +428,7 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
             enemy_def=float(enemy_final["def"]),
             enemy_res=float(enemy_final["magic_resistance"]),
             skill_manual=skill_manual,
-            enemy_manual=enemy_manual if isinstance(enemy_manual, dict) else {},
+            enemy_manual=merged_enemy_manual,
             relic_damage_pct=relic_dmg,
             ignore_def_pct=ignore,
             true_damage=true_dmg,

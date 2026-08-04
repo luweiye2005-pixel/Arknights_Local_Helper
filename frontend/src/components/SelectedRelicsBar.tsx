@@ -88,6 +88,9 @@ export default function SelectedRelicsBar({
 
   function renderParam(id: string, p: RelicConditionParam, vals: Record<string, boolean | number>) {
     if (p.id === "gold") return null;
+    if (p.auto) {
+      return <Text key={p.id} type="secondary">{p.label}（自动判断）</Text>;
+    }
     const cur =
       vals[p.id] !== undefined
         ? vals[p.id]

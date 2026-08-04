@@ -66,12 +66,12 @@ def test_calc_operator_panel_module_and_potential():
         ],
         "favor_key_frames": [],
     }
-    # potential 5 → *1.10；module +10 flat +10%
+    # 潜能加成来自 potential_ranks；没有潜能数据时不得凭潜能档位虚构百分比。
     panel = calc_operator_panel(
         op, elite=0, level=1, favor_percent=0, potential=5, module_atk_flat=10, module_atk_pct=0.1
     )
-    # atk = 100 * 1.1 * 1.1 + 10 = 131
-    assert abs(panel["atk"] - 131) < 1e-6
+    # atk = 100 * 1.1 + 10 = 120
+    assert abs(panel["atk"] - 120) < 1e-6
 
 
 # ---------- skill_multiplier_and_duration ----------
@@ -113,7 +113,7 @@ def test_skill_attack_atk_scale_key():
 
 
 def test_skill_atk_key_small_value():
-    """atk 值 < 2 时按 1+value 处理（如 0.8 → 1.8）。"""
+    """atk 是面板加算区，不应混入单次命中倍率。"""
     levels = [
         {
             "blackboard": [
@@ -122,11 +122,12 @@ def test_skill_atk_key_small_value():
         }
     ]
     info = skill_multiplier_and_duration(levels, 1)
-    assert abs(info["atk_scale"] - 1.8) < 1e-6
+    assert abs(info["atk_scale"] - 1.0) < 1e-6
+    assert abs(info["atk_pct"] - 0.8) < 1e-6
 
 
 def test_skill_atk_key_large_value():
-    """atk 一律加算：3.0 → 1+3.0=4.0 (+300%)。如乌尔比安三技能 atk=2.6→+260%。"""
+    """较大的 atk 仍是面板加算百分比，如 3.0 表示 +300%。"""
     levels = [
         {
             "blackboard": [
@@ -135,7 +136,8 @@ def test_skill_atk_key_large_value():
         }
     ]
     info = skill_multiplier_and_duration(levels, 1)
-    assert abs(info["atk_scale"] - 4.0) < 1e-6
+    assert abs(info["atk_scale"] - 1.0) < 1e-6
+    assert abs(info["atk_pct"] - 3.0) < 1e-6
 
 
 def test_skill_damage_scale_key():
@@ -147,7 +149,8 @@ def test_skill_damage_scale_key():
         }
     ]
     info = skill_multiplier_and_duration(levels, 1)
-    assert abs(info["atk_scale"] - 1.5) < 1e-6
+    assert abs(info["atk_scale"] - 1.0) < 1e-6
+    assert abs(info["damage_scale"] - 1.5) < 1e-6
 
 
 def test_skill_duration_positive():
@@ -188,3 +191,99 @@ def test_skill_blackboard_no_scale_keys():
     info = skill_multiplier_and_duration(levels, 1)
     assert abs(info["atk_scale"] - 1.0) < 1e-6
     assert info["duration"] == 5
+
+
+def test_ulpianus_skill_3_self_buffs_are_not_enemy_effects():
+    """后半句提到敌人时，前半句的自身属性标签仍应归属于干员。"""
+    levels = [
+        {
+            "name": "必须开辟的通路",
+            "duration": 25,
+            "description": (
+                "最大生命值<@ba.vup>+{max_hp:0%}</>，"
+                "攻击力<@ba.vup>+{atk:0%}</>，立即朝面前扔出一个船锚，"
+                "并对周围所有敌人造成攻击力<@ba.vup>{atk_scale:0%}</>的物理伤害"
+            ),
+            "blackboard": [
+                {"key": "max_hp", "value": 0.8},
+                {"key": "atk", "value": 2.6},
+                {"key": "atk_scale", "value": 1.6},
+            ],
+        }
+    ]
+
+    info = skill_multiplier_and_duration(levels, 1)
+    assert info["hp_pct"] == 0.8
+    assert info["atk_pct"] == 2.6
+    assert info["atk_scale"] == 1.6
+    assert info["enemy_effects"]["hp_pct"] == 0
+    assert info["enemy_effects"]["atk_pct"] == 0
+
+
+def test_positive_self_buffs_stay_self_when_description_mentions_enemies():
+    cases = [
+        (
+            "每击中一个敌人获得攻击力<@ba.vup>+{atk:0%}</>",
+            {"key": "atk", "value": 0.3},
+            "atk_pct",
+        ),
+        (
+            "攻击力<@ba.vup>+{atk:0%}</>，有地面敌人处于范围内时触发其他效果",
+            {"key": "atk", "value": 0.5},
+            "atk_pct",
+        ),
+        (
+            "自身更容易受到敌人攻击，生命上限<@ba.vup>+{max_hp:0%}</>",
+            {"key": "max_hp", "value": 0.7},
+            "hp_pct",
+        ),
+    ]
+    for description, blackboard, field in cases:
+        info = skill_multiplier_and_duration(
+            [{"description": description, "blackboard": [blackboard]}],
+            1,
+        )
+        assert info[field] == blackboard["value"]
+        assert all(value == 0 for value in info["enemy_effects"].values())
+
+
+def test_nested_enemy_flat_def_debuff_is_parsed_from_exact_placeholder():
+    description = (
+        "\u5730\u9762\u654c\u4eba\u7ecf\u8fc7\u65f6\u79fb\u52a8\u901f\u5ea6"
+        "{attack@move_speed:0%}\u3001\u9632\u5fa1\u529b{attack@def}"
+    )
+    info = skill_multiplier_and_duration(
+        [{"description": description, "blackboard": [
+            {"key": "attack@def", "value": -220},
+            {"key": "attack@move_speed", "value": -0.4},
+        ]}],
+        1,
+    )
+    assert info["enemy_effects"]["def_flat"] == -220
+    assert info["def_pct"] == 0
+
+
+def test_nested_summon_attribute_is_not_applied_to_operator_or_enemy():
+    description = "Mon3tr\u7684\u653b\u51fb\u529b+{attack@atk:0%}"
+    info = skill_multiplier_and_duration(
+        [{"description": description, "blackboard": [
+            {"key": "attack@atk", "value": 1.9},
+        ]}],
+        1,
+    )
+    assert info["atk_pct"] == 0
+    assert all(value == 0 for value in info["enemy_effects"].values())
+
+
+def test_recurring_attack_scale_is_preferred_over_terminal_extra_packet():
+    info = skill_multiplier_and_duration(
+        [{"description": (
+            "\u6bcf\u6b21\u653b\u51fb\u9020\u6210{attack@atk_scale:0%}"
+            "\uff0c\u6280\u80fd\u7ed3\u675f\u65f6\u9020\u6210{atk_scale:0%}"
+        ), "blackboard": [
+            {"key": "attack@atk_scale", "value": 1.3},
+            {"key": "atk_scale", "value": 3.0},
+        ]}],
+        1,
+    )
+    assert info["atk_scale"] == 1.3

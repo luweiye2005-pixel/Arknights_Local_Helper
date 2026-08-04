@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -13,7 +12,9 @@ from loguru import logger
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
+from app.combat.attributes import skill_multiplier_and_duration
 from app.config import REPO_ROOT, settings
+from app.data.difficulty_rules import parse_rule_desc_mods
 
 _lock = threading.RLock()
 _engine: Engine | None = None
@@ -55,6 +56,56 @@ def init_schema() -> None:
             if stmt.strip():
                 conn.execute(text(stmt))
     ensure_operator_position_column()
+    ensure_talent_and_potential_schema()
+
+
+def ensure_talent_and_potential_schema() -> None:
+    """兼容旧库：天赋表补 unlock_elite，并确保潜能定值表存在。"""
+    eng = get_engine()
+    with eng.begin() as conn:
+        tables = {r[0] for r in conn.execute(text("SHOW TABLES")).fetchall()}
+        if "operator_potential_buffs" not in tables:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS operator_potential_buffs (
+                      operator_id VARCHAR(64) NOT NULL,
+                      rank_index TINYINT NOT NULL,
+                      attr VARCHAR(32) NOT NULL,
+                      value DOUBLE NOT NULL DEFAULT 0,
+                      PRIMARY KEY (operator_id, rank_index, attr),
+                      CONSTRAINT fk_pot_op FOREIGN KEY (operator_id) REFERENCES operators(id) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """
+                )
+            )
+        if "operator_talents" not in tables:
+            return
+        cols = {r[0] for r in conn.execute(text("SHOW COLUMNS FROM operator_talents")).fetchall()}
+        if "unlock_elite" in cols:
+            return
+        # 旧主键不含 unlock_elite：重建空表结构（数据需 rebuild）
+        conn.execute(text("SET FOREIGN_KEY_CHECKS=0"))
+        conn.execute(text("DROP TABLE IF EXISTS operator_talents"))
+        conn.execute(
+            text(
+                """
+                CREATE TABLE operator_talents (
+                  operator_id VARCHAR(64) NOT NULL,
+                  talent_index INT NOT NULL DEFAULT 0,
+                  unlock_elite TINYINT NOT NULL DEFAULT 0,
+                  name VARCHAR(128) NOT NULL DEFAULT '',
+                  description TEXT NULL,
+                  potential_rank INT NOT NULL DEFAULT 0,
+                  blackboard JSON NULL,
+                  PRIMARY KEY (operator_id, talent_index, unlock_elite, potential_rank),
+                  CONSTRAINT fk_talent_op FOREIGN KEY (operator_id) REFERENCES operators(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """
+            )
+        )
+        conn.execute(text("SET FOREIGN_KEY_CHECKS=1"))
+        logger.warning("已重建 operator_talents 表结构（含 unlock_elite），请执行 rebuild-db")
 
 
 def ensure_operator_position_column() -> None:
@@ -125,6 +176,8 @@ def db_counts() -> dict[str, int]:
 
         return {
             "operators": cnt("operators"),
+            "operator_skills": cnt("operator_skills"),
+            "operator_skill_levels": cnt("operator_skill_levels"),
             "enemies": cnt("enemies"),
             "relics": cnt("relics"),
             "modules": cnt("modules"),
@@ -142,7 +195,13 @@ def db_dsn_display() -> str:
 def _clear_all(conn) -> None:
     # FK order
     tables = [
+        "operator_skill_levels",
+        "operator_skills",
         "operator_talents",
+        "operator_potential_buffs",
+        "relic_condition_params",
+        "relic_effect_rules",
+        "theme_outer_buffs",
         "relic_effects",
         "relic_upgrade_steps",
         "relic_upgrade_groups",
@@ -179,36 +238,50 @@ def _frame_data(frame: dict) -> dict[str, float]:
     }
 
 
-def _parse_rule_desc_mods(theme_id: str, grade: int, rule_desc: str) -> list[dict]:
-    """从难度 ruleDesc 启发式抽取敌人数值修正。"""
-    text = rule_desc or ""
-    mods: list[dict] = []
-    if not text:
-        return mods
+def _skill_level_row(
+    operator_id: str,
+    skill_id: str,
+    level_index: int,
+    level_data: dict,
+) -> dict[str, Any]:
+    """把一档原始技能数据转换为可直接写入 MySQL 的行。"""
+    info = skill_multiplier_and_duration([level_data], 1)
+    sp_data = level_data.get("sp_data") or level_data.get("spData") or {}
+    parsed = {
+        key: info[key]
+        for key in (
+            "atk_scale",
+            "atk_pct",
+            "attack_speed",
+            "base_attack_time",
+            "damage_scale",
+            "secondary_scale",
+            "cnt",
+            "hp_pct",
+            "def_pct",
+            "res_flat",
+            "res_pct",
+            "enemy_effects",
+        )
+    }
+    return {
+        "operator_id": operator_id,
+        "skill_id": skill_id,
+        "level": level_index + 1,
+        "name": info.get("name"),
+        "description": info.get("description") or "",
+        "duration": float(info.get("duration") or 0),
+        "skill_type": level_data.get("skill_type") or level_data.get("skillType"),
+        "prefab_id": level_data.get("prefab") or level_data.get("prefabId"),
+        "sp_cost": sp_data.get("spCost"),
+        "sp_init": sp_data.get("initSp"),
+        "blackboard": json.dumps(level_data.get("blackboard") or [], ensure_ascii=False),
+        "sp_data": json.dumps(sp_data, ensure_ascii=False),
+        "parsed_effects": json.dumps(parsed, ensure_ascii=False),
+    }
 
-    # 敌人受到的物理与法术伤害降低 x%
-    m = re.search(r"受到的?(?:物理与法术|物理和法术)?伤害降低\s*(\d+(?:\.\d+)?)\s*%", text)
-    if m:
-        v = -float(m.group(1)) / 100.0
-        mods.append({"theme_id": theme_id, "equivalent_grade": grade, "target": "enemy",
-                     "attr": "damage_taken_phys_pct", "value": v, "op": "mul", "note": "ruleDesc"})
-        mods.append({"theme_id": theme_id, "equivalent_grade": grade, "target": "enemy",
-                     "attr": "damage_taken_arts_pct", "value": v, "op": "mul", "note": "ruleDesc"})
 
-    m = re.search(r"(?:精英|领袖|boss|Boss).{0,12}受到的?(?:物理与法术|物理和法术)?伤害降低\s*(\d+(?:\.\d+)?)\s*%", text)
-    if m:
-        v = -float(m.group(1)) / 100.0
-        mods.append({"theme_id": theme_id, "equivalent_grade": grade, "target": "elite_enemy",
-                     "attr": "damage_taken_phys_pct", "value": v, "op": "mul", "note": "ruleDesc elite"})
-        mods.append({"theme_id": theme_id, "equivalent_grade": grade, "target": "boss",
-                     "attr": "damage_taken_phys_pct", "value": v, "op": "mul", "note": "ruleDesc boss"})
-
-    for attr_cn, attr in (("攻击力", "atk_pct"), ("生命", "hp_pct"), ("防御力", "def_pct"), ("防御", "def_pct")):
-        m = re.search(rf"敌人.{{0,6}}{attr_cn}.{{0,6}}(?:提升|增加|\+)\s*(\d+(?:\.\d+)?)\s*%", text)
-        if m:
-            mods.append({"theme_id": theme_id, "equivalent_grade": grade, "target": "enemy",
-                         "attr": attr, "value": float(m.group(1)) / 100.0, "op": "mul", "note": "ruleDesc"})
-    return mods
+_parse_rule_desc_mods = parse_rule_desc_mods
 
 
 def rebuild_from_store(store: Any) -> dict[str, int]:
@@ -217,6 +290,15 @@ def rebuild_from_store(store: Any) -> dict[str, int]:
         init_schema()
         eng = get_engine()
         with eng.begin() as conn:
+            approved_rules = [dict(r) for r in conn.execute(text(
+                "SELECT * FROM relic_effect_rules WHERE review_status='approved'"
+            )).mappings().all()]
+            approved_params = [dict(r) for r in conn.execute(text(
+                "SELECT * FROM relic_condition_params WHERE review_status='approved'"
+            )).mappings().all()]
+            approved_outer = [dict(r) for r in conn.execute(text(
+                "SELECT * FROM theme_outer_buffs WHERE review_status='approved'"
+            )).mappings().all()]
             _clear_all(conn)
 
             # themes
@@ -303,6 +385,8 @@ def rebuild_from_store(store: Any) -> dict[str, int]:
 
             # operators
             op_count = 0
+            skill_count = 0
+            skill_level_count = 0
             for brief in store.list_operators(limit=20000):
                 detail = store.get_operator(brief["id"])
                 if not detail:
@@ -377,6 +461,50 @@ def rebuild_from_store(store: Any) -> dict[str, int]:
                             "def_stat": float(data.get("def") or 0),
                         },
                     )
+                # 技能：保留原始字段，并将常用面板/伤害字段预解析后入库。
+                for skill_index, skill in enumerate(detail.get("skills") or []):
+                    skill_id = skill.get("skill_id")
+                    levels = skill.get("levels") or []
+                    if not skill_id or not levels:
+                        continue
+                    unlock = skill.get("unlock") or {}
+                    phase = str(unlock.get("phase") or "")
+                    unlock_elite = 2 if phase.endswith("2") else 1 if phase.endswith("1") else 0
+                    conn.execute(
+                        text(
+                            """
+                            INSERT INTO operator_skills(
+                              operator_id,skill_id,skill_index,unlock_elite,unlock_level,max_level
+                            ) VALUES(:operator_id,:skill_id,:skill_index,:unlock_elite,:unlock_level,:max_level)
+                            """
+                        ),
+                        {
+                            "operator_id": brief["id"],
+                            "skill_id": skill_id,
+                            "skill_index": skill_index,
+                            "unlock_elite": unlock_elite,
+                            "unlock_level": int(unlock.get("level") or 1),
+                            "max_level": len(levels),
+                        },
+                    )
+                    skill_count += 1
+                    for level_index, level_data in enumerate(levels):
+                        conn.execute(
+                            text(
+                                """
+                                INSERT INTO operator_skill_levels(
+                                  operator_id,skill_id,level,name,description,duration,skill_type,
+                                  prefab_id,sp_cost,sp_init,blackboard,sp_data,parsed_effects
+                                ) VALUES(
+                                  :operator_id,:skill_id,:level,:name,:description,:duration,:skill_type,
+                                  :prefab_id,:sp_cost,:sp_init,CAST(:blackboard AS JSON),
+                                  CAST(:sp_data AS JSON),CAST(:parsed_effects AS JSON)
+                                )
+                                """
+                            ),
+                            _skill_level_row(brief["id"], skill_id, level_index, level_data),
+                        )
+                        skill_level_count += 1
                 for mod in detail.get("modules") or []:
                     levels = mod.get("levels") or []
                     conn.execute(
@@ -413,32 +541,81 @@ def rebuild_from_store(store: Any) -> dict[str, int]:
                                 "attack_speed": float(lv.get("attack_speed") or 0),
                             },
                         )
-                # talents
+                # talents（含精英解锁档，避免同潜能不同精英互相覆盖）
                 for ti, talent in enumerate(raw.get("talents") or []):
-                    for ci, cand in enumerate(talent.get("candidates") or []):
+                    for cand in talent.get("candidates") or []:
                         bb = cand.get("blackboard") or []
                         if isinstance(bb, list) and bb:
-                            # 确保可序列化
                             try:
                                 bb_json = json.dumps(bb, ensure_ascii=False)
                             except Exception:
                                 bb_json = None
                         else:
                             bb_json = None
+                        unlock = cand.get("unlockCondition") or {}
+                        phase = str(unlock.get("phase") or "")
+                        if phase.endswith("2") or phase == "PHASE_2":
+                            unlock_elite = 2
+                        elif phase.endswith("1") or phase == "PHASE_1":
+                            unlock_elite = 1
+                        else:
+                            unlock_elite = 0
                         conn.execute(
                             text(
                                 """
-                                INSERT IGNORE INTO operator_talents(operator_id,talent_index,name,description,potential_rank,blackboard)
-                                VALUES(:oid,:ti,:name,:desc,:pr,:bb)
+                                INSERT IGNORE INTO operator_talents(
+                                  operator_id,talent_index,unlock_elite,name,description,potential_rank,blackboard
+                                ) VALUES(:oid,:ti,:ue,:name,:desc,:pr,:bb)
                                 """
                             ),
                             {
                                 "oid": brief["id"],
                                 "ti": ti,
+                                "ue": unlock_elite,
                                 "name": cand.get("name") or "",
                                 "desc": cand.get("description") or "",
                                 "pr": int(cand.get("requiredPotentialRank") or 0),
                                 "bb": bb_json,
+                            },
+                        )
+                # potentialRanks → 定值面板加成
+                for ri, pr in enumerate(raw.get("potentialRanks") or []):
+                    if not isinstance(pr, dict):
+                        continue
+                    buff = ((pr.get("buff") or {}).get("attributes") or {})
+                    for mod in buff.get("attributeModifiers") or []:
+                        if not isinstance(mod, dict):
+                            continue
+                        formula = str(mod.get("formulaItem") or "ADDITION").upper()
+                        if formula not in ("ADDITION", "FINAL_ADDITION"):
+                            continue
+                        at = str(mod.get("attributeType") or "").upper()
+                        attr_map = {
+                            "MAX_HP": "hp",
+                            "HP": "hp",
+                            "ATK": "atk",
+                            "DEF": "def",
+                            "ATTACK_SPEED": "aspd",
+                            "ATTACKSPEED": "aspd",
+                            "MAGIC_RESISTANCE": "res",
+                            "MAGICRESISTANCE": "res",
+                        }
+                        attr = attr_map.get(at)
+                        if not attr:
+                            continue
+                        conn.execute(
+                            text(
+                                """
+                                INSERT INTO operator_potential_buffs(operator_id,rank_index,attr,value)
+                                VALUES(:oid,:ri,:attr,:val)
+                                ON DUPLICATE KEY UPDATE value=VALUES(value)
+                                """
+                            ),
+                            {
+                                "oid": brief["id"],
+                                "ri": ri,
+                                "attr": attr,
+                                "val": float(mod.get("value") or 0),
                             },
                         )
                 op_count += 1
@@ -629,8 +806,36 @@ def rebuild_from_store(store: Any) -> dict[str, int]:
                     )
                     te_count += 1
 
+            # Restore curated rules after catalog rebuild; parsed rows can be
+            # regenerated, but approved manual decisions must never be lost.
+            for row in approved_rules:
+                row.pop("id", None)
+                if conn.execute(text("SELECT 1 FROM relics WHERE id=:id"), {"id": row["relic_id"]}).first():
+                    conn.execute(text("""
+                      INSERT INTO relic_effect_rules(relic_id,target,attr,operation,value,value_expr,when_param,damage_type,
+                        calculation_status,ignored_reason,source,rule_version,review_status,display_order,note,reviewed_at)
+                      VALUES(:relic_id,:target,:attr,:operation,:value,:value_expr,:when_param,:damage_type,
+                        :calculation_status,:ignored_reason,:source,:rule_version,:review_status,:display_order,:note,:reviewed_at)
+                    """), row)
+            for row in approved_params:
+                if conn.execute(text("SELECT 1 FROM relics WHERE id=:id"), {"id": row["relic_id"]}).first():
+                    conn.execute(text("""
+                      INSERT INTO relic_condition_params(relic_id,param_id,param_type,label,default_value,min_value,max_value,
+                        step_value,unit,auto_rule,display_order,rule_version,review_status)
+                      VALUES(:relic_id,:param_id,:param_type,:label,:default_value,:min_value,:max_value,
+                        :step_value,:unit,:auto_rule,:display_order,:rule_version,:review_status)
+                    """), row)
+            for row in approved_outer:
+                if conn.execute(text("SELECT 1 FROM themes WHERE id=:id"), {"id": row["theme_id"]}).first():
+                    conn.execute(text("""
+                      INSERT INTO theme_outer_buffs(theme_id,name,atk_pct,hp_pct,def_pct,aspd,note,rule_version,review_status)
+                      VALUES(:theme_id,:name,:atk_pct,:hp_pct,:def_pct,:aspd,:note,:rule_version,:review_status)
+                    """), row)
+
             counts = {
                 "operators": op_count,
+                "operator_skills": skill_count,
+                "operator_skill_levels": skill_level_count,
                 "enemies": en_count,
                 "relics": relic_count,
                 "relic_effects": effect_count,
@@ -768,9 +973,9 @@ def get_operator_detail(operator_id: str) -> dict | None:
         talents_rows = conn.execute(
             text(
                 """
-                SELECT talent_index,name,description,potential_rank,blackboard
+                SELECT talent_index,unlock_elite,name,description,potential_rank,blackboard
                 FROM operator_talents WHERE operator_id=:id
-                ORDER BY talent_index, potential_rank
+                ORDER BY talent_index, unlock_elite, potential_rank
                 """
             ),
             {"id": operator_id},
@@ -785,11 +990,34 @@ def get_operator_detail(operator_id: str) -> dict | None:
                     bb = None
             talents_out.append({
                 "index": int(t["talent_index"]),
+                "unlock_elite": int(t.get("unlock_elite") or 0),
                 "name": t["name"],
                 "description": t["description"],
                 "potential_rank": int(t["potential_rank"] or 0),
                 "blackboard": bb,
             })
+
+        pot_rows = conn.execute(
+            text(
+                """
+                SELECT rank_index, attr, value FROM operator_potential_buffs
+                WHERE operator_id=:id ORDER BY rank_index, attr
+                """
+            ),
+            {"id": operator_id},
+        ).mappings().all()
+        pot_by_rank: dict[int, dict[str, float]] = {}
+        for r in pot_rows:
+            ri = int(r["rank_index"])
+            pot_by_rank.setdefault(ri, {"hp": 0.0, "atk": 0.0, "def": 0.0, "aspd": 0.0, "res": 0.0})
+            attr = str(r["attr"] or "")
+            if attr in pot_by_rank[ri]:
+                pot_by_rank[ri][attr] += float(r["value"] or 0)
+        max_ri = max(pot_by_rank.keys(), default=-1)
+        potential_ranks = [
+            pot_by_rank.get(i, {"hp": 0.0, "atk": 0.0, "def": 0.0, "aspd": 0.0, "res": 0.0})
+            for i in range(max_ri + 1)
+        ]
 
         pos = (op.get("position") or "").upper() or None
         sub_id = op.get("sub_profession")
@@ -825,9 +1053,72 @@ def get_operator_detail(operator_id: str) -> dict | None:
             "talents": talents_out,
             "modules": modules,
             "favor_key_frames": favor_key_frames,
-            "potential_ranks": [],
+            "potential_ranks": potential_ranks,
             "raw_phases": raw_phases,
         }
+
+
+def get_operator_skills(operator_id: str) -> list[dict]:
+    """从 MySQL 返回前端自动填充所需的 Lv7 与最高技能等级。"""
+    init_schema()
+    with get_engine().connect() as conn:
+        skills = conn.execute(
+            text(
+                """
+                SELECT skill_id,skill_index,max_level
+                FROM operator_skills
+                WHERE operator_id=:operator_id
+                ORDER BY skill_index
+                """
+            ),
+            {"operator_id": operator_id},
+        ).mappings().all()
+        result: list[dict] = []
+        for skill in skills:
+            max_level = int(skill["max_level"] or 0)
+            target_levels = [7] if max_level <= 7 else [7, max_level]
+            rows = conn.execute(
+                text(
+                    """
+                    SELECT level,name,description,duration,sp_cost,sp_init,parsed_effects
+                    FROM operator_skill_levels
+                    WHERE operator_id=:operator_id AND skill_id=:skill_id
+                    ORDER BY level
+                    """
+                ),
+                {
+                    "operator_id": operator_id,
+                    "skill_id": skill["skill_id"],
+                },
+            ).mappings().all()
+            rows = [row for row in rows if int(row["level"]) in target_levels]
+            levels_out = []
+            for row in rows:
+                parsed = row["parsed_effects"]
+                if isinstance(parsed, str):
+                    parsed = json.loads(parsed)
+                parsed = parsed or {}
+                levels_out.append(
+                    {
+                        "level": int(row["level"]),
+                        "name": row["name"],
+                        "description": row["description"],
+                        "duration": float(row["duration"] or 0),
+                        "sp_cost": row["sp_cost"],
+                        "sp_init": row["sp_init"],
+                        **parsed,
+                    }
+                )
+            if levels_out:
+                result.append(
+                    {
+                        "skill_id": skill["skill_id"],
+                        "skill_name": levels_out[0].get("name"),
+                        "max_level": max_level,
+                        "levels": levels_out,
+                    }
+                )
+        return result
 
 
 def search_enemies(
@@ -906,6 +1197,7 @@ def get_enemy_row(enemy_id: str, level: int = 0, theme_id: str | None = None, eq
             "damage_type": en["damage_type"],
         }
         applied_mods: list[dict] = []
+        damage_taken = {"phys": 0.0, "arts": 0.0}
         if theme_id:
             mods = conn.execute(
                 text(
@@ -923,10 +1215,6 @@ def get_enemy_row(enemy_id: str, level: int = 0, theme_id: str | None = None, eq
                 if m["target"] not in targets:
                     continue
                 applied_mods.append(dict(m))
-                # 面板数值：仅叠 hp/atk/def 百分比
-                if m["target"] != "enemy":
-                    # elite/boss 专属伤害减免等不改面板数值
-                    continue
                 attr = m["attr"]
                 val = float(m["value"] or 0)
                 if attr == "hp_pct":
@@ -935,6 +1223,10 @@ def get_enemy_row(enemy_id: str, level: int = 0, theme_id: str | None = None, eq
                     mul["atk"] += val
                 elif attr == "def_pct":
                     mul["def"] += val
+                elif attr == "damage_taken_phys_pct":
+                    damage_taken["phys"] += val
+                elif attr == "damage_taken_arts_pct":
+                    damage_taken["arts"] += val
             attrs["hp"] *= 1.0 + mul["hp"]
             attrs["atk"] *= 1.0 + mul["atk"]
             attrs["def"] *= 1.0 + mul["def"]
@@ -948,6 +1240,7 @@ def get_enemy_row(enemy_id: str, level: int = 0, theme_id: str | None = None, eq
             "attributes": attrs,
             "raw_level_count": int(max_lv),
             "difficulty_mods": applied_mods,
+            "damage_taken": damage_taken,
         }
 
 
@@ -1040,12 +1333,12 @@ def search_relics(
             # attach compact effects（变体无效果时回退根藏品）
             rid = d.get("resolved_id") or d["id"]
             eff = conn.execute(
-                text("SELECT attr,value,target FROM relic_effects WHERE relic_id=:id"),
+                text("SELECT attr,value,target FROM relic_effect_rules WHERE relic_id=:id AND calculation_status='active' AND attr<>'ignored'"),
                 {"id": rid},
             ).mappings().all()
             if not eff and d.get("resolved_id"):
                 eff = conn.execute(
-                    text("SELECT attr,value,target FROM relic_effects WHERE relic_id=:id"),
+                    text("SELECT attr,value,target FROM relic_effect_rules WHERE relic_id=:id AND calculation_status='active' AND attr<>'ignored'"),
                     {"id": d["id"]},
                 ).mappings().all()
             d["effects"] = [dict(e) for e in eff]
@@ -1127,10 +1420,22 @@ def get_relic_row(relic_id: str) -> dict | None:
         d["effects"] = [
             dict(e)
             for e in conn.execute(
-                text("SELECT attr,value,target,source,note FROM relic_effects WHERE relic_id=:id"),
+                text("""
+                  SELECT attr,value,target,source,note,operation,value_expr,when_param,
+                         calculation_status,rule_version,review_status
+                  FROM relic_effect_rules
+                  WHERE relic_id=:id AND calculation_status='active' AND attr<>'ignored'
+                  ORDER BY display_order,id
+                """),
                 {"id": relic_id},
             ).mappings().all()
         ]
+        statuses = conn.execute(text("""
+          SELECT calculation_status,ignored_reason FROM relic_effect_rules
+          WHERE relic_id=:id ORDER BY calculation_status='active' DESC,id
+        """), {"id": relic_id}).mappings().all()
+        d["calculation_status"] = "active" if any(x["calculation_status"] == "active" for x in statuses) else "ignored"
+        d["ignored_reason"] = next((x["ignored_reason"] for x in statuses if x["calculation_status"] == "ignored" and x["ignored_reason"]), None)
         d["icon_url"] = f"/api/v1/assets/relic/{relic_id}"
         return d
 
@@ -1171,6 +1476,73 @@ def resolve_relic_for_grade(relic_id: str, equivalent_grade: int, conn=None) -> 
             conn.close()
 
 
+def get_relic_rule_rows(relic_ids: list[str], equivalent_grade: int = 0) -> list[dict]:
+    """Return active/manual MySQL relic rules for resolved relic ids."""
+    init_schema()
+    rows: list[dict] = []
+    with get_engine().connect() as conn:
+        for rid in relic_ids or []:
+            resolved = resolve_relic_for_grade(rid, equivalent_grade) or {"id": rid}
+            actual = resolved.get("id") or rid
+            found = conn.execute(text("""
+                SELECT r.*,x.name AS relic_name
+                FROM relic_effect_rules r JOIN relics x ON x.id=r.relic_id
+                WHERE r.relic_id=:rid
+                ORDER BY r.display_order,r.id
+            """), {"rid": actual}).mappings().all()
+            rows.extend(dict(row) for row in found)
+    return rows
+
+
+def get_relic_condition_schemas(theme_id: str | None = None) -> dict[str, dict]:
+    init_schema()
+    where = "WHERE x.theme_id=:theme" if theme_id else ""
+    params = {"theme": theme_id} if theme_id else {}
+    with get_engine().connect() as conn:
+        param_rows = conn.execute(text(f"""
+            SELECT p.*,x.name AS relic_name FROM relic_condition_params p
+            JOIN relics x ON x.id=p.relic_id {where}
+            ORDER BY p.relic_id,p.display_order,p.param_id
+        """), params).mappings().all()
+        rule_rows = conn.execute(text(f"""
+            SELECT r.* FROM relic_effect_rules r
+            JOIN relics x ON x.id=r.relic_id
+            {where}
+            ORDER BY r.relic_id,r.display_order,r.id
+        """), params).mappings().all()
+    out: dict[str, dict] = {}
+    for row in param_rows:
+        auto = row["auto_rule"]
+        if isinstance(auto, str):
+            auto = json.loads(auto)
+        item = {
+            "id": row["param_id"], "type": row["param_type"], "label": row["label"],
+            "default": bool(row["default_value"]) if row["param_type"] == "toggle" else float(row["default_value"]),
+        }
+        if row["min_value"] is not None: item["min"] = float(row["min_value"])
+        if row["max_value"] is not None: item["max"] = float(row["max_value"])
+        if row["step_value"] is not None: item["step"] = float(row["step_value"])
+        if row["unit"]: item["unit"] = row["unit"]
+        if auto: item["auto"] = auto
+        out.setdefault(row["relic_id"], {"name": row["relic_name"], "params": [], "operator_effects": [], "replace_operator_panel": True})["params"].append(item)
+    for row in rule_rows:
+        if row["relic_id"] not in out or row["calculation_status"] == "ignored" or row["target"] != "operator":
+            continue
+        effect = {"attr": row["attr"], "value": float(row["value"])}
+        if row["value_expr"]: effect["expr"] = row["value_expr"]
+        if row["when_param"]: effect["when"] = row["when_param"]
+        effect["operation"] = row["operation"]
+        out.setdefault(row["relic_id"], {"name": row["relic_id"], "params": [], "operator_effects": [], "replace_operator_panel": True})["operator_effects"].append(effect)
+    return {key: value for key, value in out.items() if value["params"] or value["operator_effects"]}
+
+
+def get_theme_outer_buffs() -> dict[str, dict]:
+    init_schema()
+    with get_engine().connect() as conn:
+        rows = conn.execute(text("SELECT * FROM theme_outer_buffs")).mappings().all()
+    return {row["theme_id"]: {key: row[key] for key in ("name", "atk_pct", "hp_pct", "def_pct", "aspd", "note")} for row in rows}
+
+
 def get_relic_effects_merged(relic_ids: list[str], equivalent_grade: int = 0) -> list[dict]:
     """解析升级链后返回 effect 行列表；变体无效果时回退到同链更低档。"""
     init_schema()
@@ -1180,7 +1552,7 @@ def get_relic_effects_merged(relic_ids: list[str], equivalent_grade: int = 0) ->
         for rid in relic_ids:
             resolved = resolve_relic_for_grade(rid, equivalent_grade, conn=conn)
             target_id = (resolved or {}).get("id") or rid
-            # 收集同组内 <= grade 的全部候选（高→低），取第一份非空 effects
+            # 收集同组内 <= grade 的全部候选（高→低），取第一份非空规则
             candidates: list[str] = [target_id]
             steps = conn.execute(
                 text(
@@ -1199,20 +1571,27 @@ def get_relic_effects_merged(relic_ids: list[str], equivalent_grade: int = 0) ->
             chosen_rows = []
             for cid in candidates:
                 rows = conn.execute(
-                    text(
-                        "SELECT relic_id,target,attr,value,source,note FROM relic_effects WHERE relic_id=:id"
-                    ),
+                    text("""
+                        SELECT relic_id,target,attr,value,source,note,operation,rule_version,review_status
+                        FROM relic_effect_rules
+                        WHERE relic_id=:id AND calculation_status='active'
+                          AND when_param IS NULL AND value_expr IS NULL AND attr<>'ignored'
+                          AND NOT EXISTS (SELECT 1 FROM relic_condition_params p WHERE p.relic_id=relic_effect_rules.relic_id)
+                    """),
                     {"id": cid},
                 ).mappings().all()
                 if rows:
                     chosen_rows = [dict(x) for x in rows]
                     break
             if not chosen_rows:
-                # 无升级链时再直接查一次原 id
                 rows = conn.execute(
-                    text(
-                        "SELECT relic_id,target,attr,value,source,note FROM relic_effects WHERE relic_id=:id"
-                    ),
+                    text("""
+                        SELECT relic_id,target,attr,value,source,note,operation,rule_version,review_status
+                        FROM relic_effect_rules
+                        WHERE relic_id=:id AND calculation_status='active'
+                          AND when_param IS NULL AND value_expr IS NULL AND attr<>'ignored'
+                          AND NOT EXISTS (SELECT 1 FROM relic_condition_params p WHERE p.relic_id=relic_effect_rules.relic_id)
+                    """),
                     {"id": rid},
                 ).mappings().all()
                 chosen_rows = [dict(x) for x in rows]

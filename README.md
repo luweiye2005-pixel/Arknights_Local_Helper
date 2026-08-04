@@ -70,3 +70,5 @@ backend\.venv\Scripts\python scripts\prepare_local.py
 ## 说明
 
 面板与藏品效果为简化模型（ATK%、攻速、伤害% 等，入库为 `relic_effects`）；复杂条件效果未完整模拟。
+潜能按 `potentialRanks` 定值累加；天赋仅计入 blackboard 中可识别的常驻属性（条件触发类仍为近似）。
+**更新代码后请在「数据管理」执行重建数据库**，以刷新难度修正、潜能与天赋表结构。

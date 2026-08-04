@@ -162,6 +162,29 @@ class GameDataStore:
             )
         except Exception:
             sub_cn = None
+
+        talents_out: list[dict] = []
+        for ti, talent in enumerate(raw.get("talents") or []):
+            for cand in talent.get("candidates") or []:
+                unlock = cand.get("unlockCondition") or {}
+                phase = str(unlock.get("phase") or "")
+                if phase.endswith("2") or phase == "PHASE_2":
+                    unlock_elite = 2
+                elif phase.endswith("1") or phase == "PHASE_1":
+                    unlock_elite = 1
+                else:
+                    unlock_elite = 0
+                talents_out.append(
+                    {
+                        "index": ti,
+                        "unlock_elite": unlock_elite,
+                        "name": cand.get("name") or "",
+                        "description": cand.get("description") or "",
+                        "potential_rank": int(cand.get("requiredPotentialRank") or 0),
+                        "blackboard": cand.get("blackboard") or [],
+                    }
+                )
+
         return {
             "id": operator_id,
             "name": raw.get("name"),
@@ -175,6 +198,7 @@ class GameDataStore:
             "description": raw.get("description"),
             "phases": phases,
             "skills": skills,
+            "talents": talents_out,
             "modules": modules,
             "favor_key_frames": raw.get("favorKeyFrames") or [],
             "potential_ranks": raw.get("potentialRanks") or [],

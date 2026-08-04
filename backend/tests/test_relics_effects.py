@@ -1,6 +1,8 @@
 """遗物效果解析与合并。"""
 from unittest.mock import patch
 
+import pytest
+
 from app.combat.relics import (
     CombatModifiers,
     EnemyStatModifiers,
@@ -52,12 +54,26 @@ def test_merge_caps_ignore_def():
 def test_build_prefers_mysql_effects_when_present():
     relics = [{"id": "r1", "name": "假", "usage": "攻击力+99%"}]
     fake_rows = [{"relic_id": "r1", "target": "operator", "attr": "atk_pct", "value": 0.05, "note": "db"}]
-    with patch("app.data.db.get_relic_effects_merged", return_value=fake_rows):
+    with (
+        patch("app.data.db.get_relic_effects_merged", return_value=fake_rows),
+        patch("app.data.db.resolve_relic_for_grade", return_value=None),
+        patch("app.data.db.get_relic_row", return_value=None),
+    ):
         m = build_relic_modifiers(relics)
     assert abs(m.atk_pct - 0.05) < 1e-6  # 用 DB 而非 99%
 
 
-def test_build_fallback_text_when_mysql_empty():
+def test_build_fails_explicitly_when_mysql_is_unavailable():
+    relics = [{"id": "offline", "name": "离线藏品", "usage": "攻击力+10%"}]
+    with (
+        patch("app.data.db.resolve_relic_for_grade", side_effect=RuntimeError("db offline")),
+        patch("app.data.db.get_relic_effects_merged", side_effect=RuntimeError("db offline")),
+    ):
+        with pytest.raises(RuntimeError, match="MySQL 藏品规则不可用"):
+            build_relic_modifiers(relics)
+
+
+def test_build_does_not_parse_text_when_mysql_rules_are_empty():
     relics = [{"id": "not_in_db_xxx", "name": "A", "usage": "攻击力+10%"}]
     with (
         patch("app.data.db.get_relic_effects_merged", return_value=[]),
@@ -65,7 +81,7 @@ def test_build_fallback_text_when_mysql_empty():
         patch("app.data.db.get_relic_row", return_value=None),
     ):
         m = build_relic_modifiers(relics)
-    assert abs(m.atk_pct - 0.1) < 1e-6
+    assert m.atk_pct == 0
 
 
 def test_build_with_relic_ids_falls_back_to_db_text():

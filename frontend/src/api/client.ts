@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { OperatorDetail, PanelPersistedState, PanelResult } from "../types/panel";
 
 export const api = axios.create({
   baseURL: "/api/v1",
@@ -84,8 +85,19 @@ export async function searchOperators(q: string, limit = 30) {
 
 export async function getOperator(id: string) {
   const { data } = await api.get(`/operators/${id}`);
-  return data;
+  return data as OperatorDetail;
 }
+
+export type EnemySkillEffects = {
+  atk_pct?: number;
+  atk_flat?: number;
+  hp_pct?: number;
+  hp_flat?: number;
+  def_pct?: number;
+  def_flat?: number;
+  res_pct?: number;
+  res_flat?: number;
+};
 
 export type OperatorSkill = {
   skill_id: string;
@@ -94,6 +106,7 @@ export type OperatorSkill = {
     level: number;
     name?: string;
     atk_scale: number;
+    atk_pct: number;
     duration: number;
     description?: string;
     sp_cost?: number;
@@ -105,6 +118,9 @@ export type OperatorSkill = {
     cnt: number;
     hp_pct: number;
     def_pct: number;
+    res_flat: number;
+    res_pct: number;
+    enemy_effects?: EnemySkillEffects;
   }[];
 };
 
@@ -167,9 +183,9 @@ export async function listThemeDifficulties(themeId: string) {
   return data.items as ThemeDifficulty[];
 }
 
-export async function calcPanel(body: Record<string, unknown>) {
+export async function calcPanel(body: Record<string, unknown>): Promise<PanelResult> {
   const { data } = await api.post("/calc/panel", body);
-  return data;
+  return data as PanelResult;
 }
 
 export async function knowledgeStatus() {
@@ -219,11 +235,11 @@ export async function prefetchRelicIcons(all = true) {
   return data;
 }
 
-export async function loadPanelState(): Promise<Record<string, unknown>> {
+export async function loadPanelState(): Promise<PanelPersistedState> {
   const { data } = await api.get("/knowledge/panel-state");
   return data || {};
 }
 
-export async function savePanelState(state: Record<string, unknown>) {
+export async function savePanelState(state: PanelPersistedState) {
   await api.post("/knowledge/panel-state", state);
 }

@@ -282,17 +282,20 @@ def calculate_damage(payload: dict[str, Any]) -> dict[str, Any]:
     aspd = panel["attack_speed"] + mods.aspd
     interval = attack_interval(panel["base_attack_time"], aspd)
 
-    # 若未选手填提升至，回退到技能表 atk_scale
-    if not skill_manual.get("atk_scale_to") and not skill_manual.get("damage_scale_pct"):
+    # 若未选手填倍率，回退到技能表：atk→面板%，atk_scale→造成%
+    if not skill_manual.get("atk_scale_to") and skill_manual.get("damage_scale_pct") in (None, 100) and not skill_atk_pct:
         skills = operator.get("skills") or []
-        skill_info = {"atk_scale": 1.0, "duration": 0.0, "name": "普攻"}
+        skill_info = {"atk_scale": 1.0, "atk_pct": 0.0, "duration": 0.0, "name": "普攻"}
         if skills and 0 <= skill_index < len(skills):
             skill_info = skill_multiplier_and_duration(skills[skill_index].get("levels") or [], skill_level)
         scale = float(skill_info.get("atk_scale") or 1.0)
+        skill_atk_pct = float(skill_info.get("atk_pct") or 0)
+        combat_atk = panel["atk"] * (1.0 + mods.atk_pct + skill_atk_pct)
         skill_manual = {
             **skill_manual,
-            "atk_scale_to": [scale * 100],
-            "damage_scale_pct": 100,
+            "atk_pct": skill_atk_pct,
+            "atk_scale_to": [],
+            "damage_scale_pct": scale * 100.0,
         }
         duration = float(skill_info.get("duration") or 0.0)
         skill_name = skill_info.get("name")
