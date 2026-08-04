@@ -14,3 +14,5 @@ pytest>=8.0.0
 
 SQLAlchemy>=2.0.0
 PyMySQL>=1.1.0
+pywebview>=5.3
+pyinstaller>=6.10

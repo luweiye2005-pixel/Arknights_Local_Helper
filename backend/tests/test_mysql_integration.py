@@ -29,6 +29,8 @@ def test_difficulty_keys_unique_per_theme():
 
 
 def test_resolve_upgrade_variant():
+    if gdb.source_name() != "mysql":
+        pytest.skip("仅验证 MySQL 迁移后端")
     # 任取一条升级链
     from sqlalchemy import text
     from app.data.mysql_db import get_engine, resolve_relic_for_grade

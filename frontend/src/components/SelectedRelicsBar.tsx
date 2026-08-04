@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Button, InputNumber, Space, Switch, Tooltip, Typography } from "antd";
 import type { RelicBrief, RelicConditionParam, RelicConditionSchema } from "../api/client";
+import { desktopAssetUrl } from "../api/client";
 
 const { Text } = Typography;
 
@@ -157,7 +158,7 @@ export default function SelectedRelicsBar({
             {displayIds.map((id) => {
           const r = byId.get(id);
           const schema = schemaOf(id, byId, conditions);
-          const src = `${r?.icon_url || `/api/v1/assets/relic/${id}`}?v=${iconRev}`;
+          const src = desktopAssetUrl(`${r?.icon_url || `/api/v1/assets/relic/${id}`}?v=${iconRev}`);
           const vals = conditionValues[id] || {};
           const tip = effectTooltip(r, schema) || id;
           return (

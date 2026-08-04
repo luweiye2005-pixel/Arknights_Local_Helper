@@ -1,26 +1,11 @@
-"""数据访问层（MySQL）。保留 app.data.db 导入路径兼容。"""
-from app.data.mysql_db import (  # noqa: F401
-    db_counts,
-    db_dsn_display,
-    db_path,
-    get_enemy_row,
-    get_meta,
-    get_module,
-    get_operator_detail,
-    get_operator_skills,
-    get_relic_effects_merged,
-    get_relic_rule_rows,
-    get_relic_condition_schemas,
-    get_theme_outer_buffs,
-    get_relic_row,
-    init_schema,
-    list_theme_difficulties,
-    list_themes_db,
-    rebuild_from_store,
-    refresh_theme_enemies,
-    resolve_relic_for_grade,
-    search_enemies,
-    search_operators,
-    search_relics,
-    set_meta,
-)
+"""数据访问门面：开发环境 MySQL，桌面版只读 JSON。"""
+from importlib import import_module
+
+from app.config import settings
+
+_backend_name = "app.data.json_db" if settings.DATA_BACKEND == "json" else "app.data.mysql_db"
+_backend = import_module(_backend_name)
+
+for _name in dir(_backend):
+    if not _name.startswith("_"):
+        globals()[_name] = getattr(_backend, _name)

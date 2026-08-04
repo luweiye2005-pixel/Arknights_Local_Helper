@@ -14,7 +14,7 @@ def list_enemies(
 ):
     return {
         "items": gdb.search_enemies(q=q, limit=limit, theme_id=theme_id),
-        "source": "mysql",
+        "source": gdb.source_name(),
         "theme_id": theme_id,
     }
 

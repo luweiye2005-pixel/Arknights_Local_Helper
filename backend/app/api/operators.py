@@ -18,7 +18,7 @@ def _slim_operator(op: dict) -> dict:
 
 @router.get("")
 def list_operators(q: str | None = Query(None), limit: int = Query(50, ge=1, le=200)):
-    return {"items": gdb.search_operators(q=q, limit=limit), "source": "mysql"}
+    return {"items": gdb.search_operators(q=q, limit=limit), "source": gdb.source_name()}
 
 
 @router.get("/{operator_id}")
@@ -39,4 +39,4 @@ def get_operator_skills(operator_id: str):
     op = gdb.get_operator_detail(operator_id)
     if not op:
         raise HTTPException(404, f"未找到干员 {operator_id}")
-    return {"operator_id": operator_id, "skills": gdb.get_operator_skills(operator_id), "source": "mysql"}
+    return {"operator_id": operator_id, "skills": gdb.get_operator_skills(operator_id), "source": gdb.source_name()}

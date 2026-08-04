@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     RELIC_CONDITIONS_FILE: str = "../data/patches/relic_conditions.json"
     OUTER_BUFFS_FILE: str = "../data/patches/outer_buffs.json"
     ICONS_DIR: str = "../data/icons"
+    DATA_BACKEND: str = "mysql"
+    OFFLINE_DATA_DIR: str = "../release_data"
 
     MYSQL_HOST: str = "127.0.0.1"
     MYSQL_PORT: int = 3306
@@ -37,7 +39,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     model_config = {
-        "env_file": ".env",
+        "env_file": (REPO_ROOT / ".env", BACKEND_DIR / ".env"),
         "env_file_encoding": "utf-8",
         "case_sensitive": True,
         "extra": "ignore",
@@ -72,6 +74,10 @@ class Settings(BaseSettings):
     @property
     def icons_path(self) -> Path:
         return self.resolve_path(self.ICONS_DIR)
+
+    @property
+    def offline_data_path(self) -> Path:
+        return self.resolve_path(self.OFFLINE_DATA_DIR)
 
     @property
     def mysql_url(self) -> str:

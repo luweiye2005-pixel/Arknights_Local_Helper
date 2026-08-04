@@ -1,11 +1,9 @@
-import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Menu } from "antd";
 import PanelPage from "./pages/PanelPage";
-import DataPage from "./pages/DataPage";
 
 const items = [
-  { key: "/", label: <NavLink to="/">面板计算</NavLink> },
-  { key: "/data", label: <NavLink to="/data">数据管理</NavLink> },
+  { key: "/", label: "面板计算" },
 ];
 
 export default function App() {
@@ -24,7 +22,6 @@ export default function App() {
         <main className="app-main">
           <Routes>
             <Route path="/" element={<PanelPage />} />
-            <Route path="/data" element={<DataPage />} />
           </Routes>
         </main>
       </div>

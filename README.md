@@ -1,81 +1,67 @@
-# 明日方舟本地数据面板
+# 明日方舟离线面板
 
-纯本地工具：同步游戏数值到 **MySQL**，浏览干员/敌人/藏品属性，按集成战略难度计算藏品加成后面板。
+非官方 Windows 离线桌面工具，用于计算干员、敌人、模组与集成战略藏品对面板和最终伤害的影响。
 
-## 功能
+## 普通用户
 
-- **拉取并入库**：下载 ArknightsGameData JSON → 结构化写入 MySQL `arknights_helper`
-- **属性查看**：干员 / 敌人 / 藏品搜索与详情
-- **面板计算**：精英/等级/模组 + 主题难度 + 多选藏品 → 基础面板 vs 加成后面板
-- **难度**：藏品升级链（`difficultyUpgradeRelicGroups`）与难度规则修正（基础值 + 修正）
+1. 从 Releases 下载 `ArknightsOfflinePanel-win64.zip`。
+2. 解压到任意可写目录。
+3. 双击 `ArknightsOfflinePanel.exe`。
 
-## 准备 MySQL
+桌面版内置计算数据、藏品规则、图标和 WebView2 固定运行时，不需要安装 Python、Node、MySQL，也不会联网更新数据。用户配置保存在 `%LOCALAPPDATA%\ArknightsOfflinePanel\panel_state.json`。
 
-1. 启动本机 MySQL 服务（例如服务名 `MySQL80`）
-2. 建库与账号（可按需改密码）：
+计算采用简化模型，仅关注敌我面板与最终单次伤害；技力、部署费用、阻挡数、招募、资源和探索流程等效果不计算。结果仅供参考，不代表游戏官方结果。
 
-```sql
-CREATE DATABASE IF NOT EXISTS arknights_helper DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'arknights'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON arknights_helper.* TO 'arknights'@'localhost';
-FLUSH PRIVILEGES;
-```
+## 项目结构
 
-3. 复制 `backend/.env.example` → `backend/.env`，填写 `MYSQL_*`
-4. 可选：执行 `scripts/mysql_init.sql`（应用启动灌库时也会自动建表）
+- `backend/app/combat`：Python 计算核心。
+- `backend/app/data/json_db.py`：桌面版只读数据层。
+- `frontend`：React 计算界面；桌面发布版不包含数据管理页面。
+- `scripts/desktop_data.py`：开发者数据维护命令。
+- `scripts/build_desktop.ps1`：Windows 测试、构建和打包。
 
-首次建库后执行一次藏品规则修复迁移；脚本可重复运行，后续全量同步会保留这些 `approved` 规则：
+## 开发者更新数据
+
+开发环境在迁移期仍可使用 MySQL。复制 `backend/.env.example` 为 `backend/.env`，配置数据库后执行：
 
 ```powershell
+# 拉取原始数据
+backend\.venv\Scripts\python.exe scripts\desktop_data.py sync
+
+# 应用人工审核规则并审计
 cd backend
 .\.venv\Scripts\python.exe ..\scripts\apply_relic_fix_plan.py
+.\.venv\Scripts\python.exe ..\scripts\desktop_data.py audit
+
+# 只允许 approved active 规则进入正式数据包
+.\.venv\Scripts\python.exe ..\scripts\desktop_data.py build-data
 ```
 
-## 启动
+迁移期间可用 `build-data --allow-pending` 生成对比测试包，但该选项不得用于正式 Release。
+
+## 本地开发
 
 ```powershell
-# 后端
 cd backend
 python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+.\.venv\Scripts\pip.exe install -r requirements.txt
 uvicorn app.main:app --host 127.0.0.1 --port 8000
 
-# 前端（另开终端）
 cd frontend
-npm install --registry=https://registry.npmmirror.com
+npm ci
 npm run dev
 ```
 
-或运行 `scripts\start_local.ps1`。
+## Windows 打包
 
-- 前端：http://127.0.0.1:5173/
-- API：http://127.0.0.1:8000/docs
-
-## 使用
-
-1. 打开「数据管理」→ **一键保存到本地（数据+图标）**（写入 MySQL + 下载图标）
-2. 等待图标后台下载完成；也可命令行：
+将微软 WebView2 Fixed Version Runtime x64 解压到 `vendor/WebView2/`，然后执行：
 
 ```powershell
-backend\.venv\Scripts\python scripts\prepare_local.py
+.\scripts\build_desktop.ps1
 ```
 
-3. 本地目录：
-   - `data/gamedata/` 游戏 JSON
-   - MySQL 库 `arknights_helper`
-   - `data/icons/relics/` 藏品 PNG
-4. 「面板计算」选择主题难度与藏品，查看最终面板
+正式构建在存在未审核 active 藏品规则时会失败。`-AllowPending` 仅用于迁移期桌面冒烟测试。
 
-浏览图标只读本地文件，不会在打开页面时访问外网。
+## 数据来源与许可
 
-## 数据来源
-
-- [Kengxxiao/ArknightsGameData](https://github.com/Kengxxiao/ArknightsGameData)
-- 藏品图标：优先 PRTS（`torappu.prts.wiki`）按 `iconId` 缓存到本地
-
-## 说明
-
-面板与藏品效果为简化模型（ATK%、攻速、伤害% 等，入库为 `relic_effects`）；复杂条件效果未完整模拟。
-潜能按 `potentialRanks` 定值累加；天赋仅计入 blackboard 中可识别的常驻属性（条件触发类仍为近似）。
-**更新代码后请在「数据管理」执行重建数据库**，以刷新难度修正、潜能与天赋表结构。
+源代码采用 MIT License。游戏数据和图片不适用 MIT License；发布前必须遵循 [THIRD_PARTY_NOTICE.md](THIRD_PARTY_NOTICE.md) 中的来源、版权和再分发要求。

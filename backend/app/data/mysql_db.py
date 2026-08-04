@@ -19,6 +19,10 @@ from app.data.difficulty_rules import parse_rule_desc_mods
 _lock = threading.RLock()
 _engine: Engine | None = None
 
+
+def source_name() -> str:
+    return "mysql"
+
 SCHEMA_SQL = (REPO_ROOT / "scripts" / "mysql_init.sql").read_text(encoding="utf-8")
 
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Input, Select, Space, Typography } from "antd";
-import { RelicBrief, RelicConditionSchema, ThemeDifficulty, assetsStatus, listRelics, listThemeDifficulties } from "../api/client";
+import { RelicBrief, RelicConditionSchema, ThemeDifficulty, assetsStatus, desktopAssetUrl, listRelics, listThemeDifficulties } from "../api/client";
 import { difficultyLabel, pickDefaultDifficulty } from "../utils/difficulty";
 
 const { Text } = Typography;
@@ -155,7 +155,7 @@ export default function RelicGrid({
       <div className="relic-grid">
         {items.map((r) => {
           const active = selected.has(r.id);
-          const src = `${r.icon_url || `/api/v1/assets/relic/${r.id}`}?v=${iconRev || "1"}`;
+          const src = desktopAssetUrl(`${r.icon_url || `/api/v1/assets/relic/${r.id}`}?v=${iconRev || "1"}`);
           const tip = [
             r.usage || r.name,
             r.resolved_id && r.resolved_id !== r.id ? `难度升级→${r.resolved_name || r.resolved_id}` : "",

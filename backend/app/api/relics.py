@@ -9,13 +9,13 @@ router = APIRouter()
 
 @router.get("/themes")
 def list_themes():
-    return {"themes": gdb.list_themes_db(), "source": "mysql"}
+    return {"themes": gdb.list_themes_db(), "source": gdb.source_name()}
 
 
 @router.get("/themes/{theme_id}/difficulties")
 def list_difficulties(theme_id: str):
     items = gdb.list_theme_difficulties(theme_id)
-    return {"theme_id": theme_id, "items": items, "source": "mysql"}
+    return {"theme_id": theme_id, "items": items, "source": gdb.source_name()}
 
 
 @router.get("/themes/{theme_id}/outer-buff")
@@ -62,7 +62,7 @@ def list_relics(
         "themes": gdb.list_themes_db(),
         "items": items,
         "conditions": schemas,
-        "source": "mysql",
+        "source": gdb.source_name(),
     }
 
 

@@ -6,6 +6,16 @@ export const api = axios.create({
   timeout: 30000,
 });
 
+export const desktopToken = typeof window === "undefined"
+  ? null
+  : new URLSearchParams(window.location.search).get("token");
+if (desktopToken) api.defaults.headers.common["X-Desktop-Token"] = desktopToken;
+
+export function desktopAssetUrl(url: string): string {
+  if (!desktopToken) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(desktopToken)}`;
+}
+
 export type OperatorBrief = {
   id: string;
   name: string;

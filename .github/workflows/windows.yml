@@ -1,0 +1,22 @@
+name: windows-offline
+on: [push, pull_request]
+jobs:
+  test-and-package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: pip install -r backend/requirements.txt
+      - run: python -m pytest backend/tests -q
+      - working-directory: frontend
+        run: npm ci
+      - working-directory: frontend
+        run: npm test -- --run
+      - working-directory: frontend
+        run: npm run build
+      - run: python scripts/create_smoke_bundle.py release_data
+      - run: python -m PyInstaller --clean --noconfirm desktop.spec
+      - run: .\dist\ArknightsOfflinePanel\ArknightsOfflinePanel.exe --smoke-test

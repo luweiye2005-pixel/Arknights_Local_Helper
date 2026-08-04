@@ -35,6 +35,10 @@ frontend/tsconfig.tsbuildinfo
 # Local agent settings and generated audit output
 .claude/
 reports/
+release_data/
+dist/
+build/
+vendor/WebView2/
 
 # One-off local probes/migrations
 scripts/_cursor_migrate.ps1

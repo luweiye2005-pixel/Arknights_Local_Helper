@@ -13,17 +13,17 @@ def test_health_docs():
     assert r.status_code == 200
 
 
-def test_list_operators_mysql_source():
+def test_list_operators_reports_active_source():
     fake = [{"id": "char_1", "name": "阿米娅", "rarity": 5, "profession": "CASTER", "profession_cn": "术师"}]
     with patch("app.api.operators.gdb.search_operators", return_value=fake):
         r = client.get("/api/v1/operators", params={"q": "阿", "limit": 10})
     assert r.status_code == 200
     body = r.json()
-    assert body["source"] == "mysql"
+    assert body["source"] in {"mysql", "json"}
     assert body["items"][0]["name"] == "阿米娅"
 
 
-def test_operator_skills_mysql_source():
+def test_operator_skills_reports_active_source():
     fake_skills = [
         {
             "skill_id": "skchr_ulpia_3",
@@ -38,7 +38,7 @@ def test_operator_skills_mysql_source():
     ):
         response = client.get("/api/v1/operators/char_4145_ulpia/skills")
     assert response.status_code == 200
-    assert response.json()["source"] == "mysql"
+    assert response.json()["source"] in {"mysql", "json"}
     assert response.json()["skills"][0]["levels"][0]["atk_pct"] == 2.6
 
 
