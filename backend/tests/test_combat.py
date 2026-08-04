@@ -40,6 +40,19 @@ def test_true_damage():
     assert abs(d["final"] - 400) < 1e-6
 
 
+def test_elemental_damage_and_taken_amplification():
+    d = calc_hit_damage(
+        200,
+        "ELEMENTAL",
+        enemy_def=9999,
+        enemy_res=100,
+        scale=1.5,
+        elemental_damage_taken_pct=1.0,
+    )
+    assert abs(d["basic"] - 300) < 1e-6
+    assert abs(d["final"] - 600) < 1e-6
+
+
 def test_product_scales_wishadel():
     # 125% × 220% × 造成100% = 2.75
     assert abs(product_atk_scales([125, 220], 100) - 2.75) < 1e-9

@@ -57,6 +57,17 @@ def init_schema() -> None:
                 conn.execute(text(stmt))
     ensure_operator_position_column()
     ensure_talent_and_potential_schema()
+    ensure_module_effect_schema()
+
+
+def ensure_module_effect_schema() -> None:
+    """兼容旧库：为模组等级补充来自 battle_equip_table 的描述数据。"""
+    with get_engine().begin() as conn:
+        cols = {r[0] for r in conn.execute(text("SHOW COLUMNS FROM module_levels")).fetchall()}
+        if "trait_effects" not in cols:
+            conn.execute(text("ALTER TABLE module_levels ADD COLUMN trait_effects JSON NULL"))
+        if "talent_effects" not in cols:
+            conn.execute(text("ALTER TABLE module_levels ADD COLUMN talent_effects JSON NULL"))
 
 
 def ensure_talent_and_potential_schema() -> None:
@@ -527,8 +538,8 @@ def rebuild_from_store(store: Any) -> dict[str, int]:
                         conn.execute(
                             text(
                                 """
-                                INSERT INTO module_levels(module_id,level,atk,atk_pct,hp,defense,attack_speed)
-                                VALUES(:mid,:level,:atk,:atk_pct,:hp,:defense,:attack_speed)
+                                INSERT INTO module_levels(module_id,level,atk,atk_pct,hp,defense,attack_speed,trait_effects,talent_effects)
+                                VALUES(:mid,:level,:atk,:atk_pct,:hp,:defense,:attack_speed,CAST(:trait_effects AS JSON),CAST(:talent_effects AS JSON))
                                 """
                             ),
                             {
@@ -539,6 +550,8 @@ def rebuild_from_store(store: Any) -> dict[str, int]:
                                 "hp": float(lv.get("hp") or 0),
                                 "defense": float(lv.get("defense") or 0),
                                 "attack_speed": float(lv.get("attack_speed") or 0),
+                                "trait_effects": json.dumps(lv.get("trait_effects") or [], ensure_ascii=False),
+                                "talent_effects": json.dumps(lv.get("talent_effects") or [], ensure_ascii=False),
                             },
                         )
                 # talents（含精英解锁档，避免同潜能不同精英互相覆盖）
@@ -865,6 +878,51 @@ def rebuild_from_store(store: Any) -> dict[str, int]:
         return db_counts()
 
 
+def refresh_modules_from_store(store: Any) -> dict[str, int]:
+    """只刷新模组及等级效果，避免影响藏品规则和其他已审核数据。"""
+    with _lock:
+        init_schema()
+        module_count = 0
+        level_count = 0
+        with get_engine().begin() as conn:
+            conn.execute(text("DELETE FROM modules"))
+            for brief in store.list_operators(limit=20000):
+                detail = store.get_operator(brief["id"])
+                if not detail:
+                    continue
+                for mod in detail.get("modules") or []:
+                    levels = mod.get("levels") or []
+                    conn.execute(
+                        text("""
+                            INSERT INTO modules(id,operator_id,name,type_name,max_level,description)
+                            VALUES(:id,:oid,:name,:type_name,:max_level,:description)
+                        """),
+                        {
+                            "id": mod["id"], "oid": brief["id"],
+                            "name": mod.get("name") or mod["id"], "type_name": mod.get("type"),
+                            "max_level": len(levels) or 1, "description": mod.get("description") or "",
+                        },
+                    )
+                    module_count += 1
+                    for lv in levels:
+                        conn.execute(
+                            text("""
+                                INSERT INTO module_levels(module_id,level,atk,atk_pct,hp,defense,attack_speed,trait_effects,talent_effects)
+                                VALUES(:mid,:level,:atk,:atk_pct,:hp,:defense,:attack_speed,CAST(:trait_effects AS JSON),CAST(:talent_effects AS JSON))
+                            """),
+                            {
+                                "mid": mod["id"], "level": int(lv.get("level") or 1),
+                                "atk": float(lv.get("atk") or 0), "atk_pct": float(lv.get("atk_pct") or 0),
+                                "hp": float(lv.get("hp") or 0), "defense": float(lv.get("defense") or 0),
+                                "attack_speed": float(lv.get("attack_speed") or 0),
+                                "trait_effects": json.dumps(lv.get("trait_effects") or [], ensure_ascii=False),
+                                "talent_effects": json.dumps(lv.get("talent_effects") or [], ensure_ascii=False),
+                            },
+                        )
+                        level_count += 1
+        return {"modules": module_count, "module_levels": level_count}
+
+
 # ---------- queries ----------
 
 def search_operators(q: str | None = None, limit: int = 50) -> list[dict]:
@@ -952,7 +1010,7 @@ def get_operator_detail(operator_id: str) -> dict | None:
             levels = conn.execute(
                 text(
                     """
-                    SELECT level,atk,atk_pct,hp,defense,attack_speed
+                    SELECT level,atk,atk_pct,hp,defense,attack_speed,trait_effects,talent_effects
                     FROM module_levels WHERE module_id=:mid ORDER BY level
                     """
                 ),
@@ -965,7 +1023,7 @@ def get_operator_detail(operator_id: str) -> dict | None:
                     "type": m["type_name"],
                     "description": m["description"],
                     "max_level": int(m["max_level"] or 1),
-                    "levels": [dict(lv) for lv in levels],
+                    "levels": [_module_level_dict(lv) for lv in levels],
                 }
             )
 
@@ -1611,7 +1669,7 @@ def get_module(module_id: str) -> dict | None:
         if not m:
             return None
         levels = conn.execute(
-            text("SELECT level,atk,atk_pct,hp,defense,attack_speed FROM module_levels WHERE module_id=:id ORDER BY level"),
+            text("SELECT level,atk,atk_pct,hp,defense,attack_speed,trait_effects,talent_effects FROM module_levels WHERE module_id=:id ORDER BY level"),
             {"id": module_id},
         ).mappings().all()
         return {
@@ -1620,8 +1678,21 @@ def get_module(module_id: str) -> dict | None:
             "type": m["type_name"],
             "description": m["description"],
             "max_level": int(m["max_level"] or 1),
-            "levels": [dict(lv) for lv in levels],
+            "levels": [_module_level_dict(lv) for lv in levels],
         }
+
+
+def _module_level_dict(row: Any) -> dict:
+    result = dict(row)
+    for field in ("trait_effects", "talent_effects"):
+        value = result.get(field)
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except Exception:
+                value = []
+        result[field] = value or []
+    return result
 
 
 # 兼容旧名

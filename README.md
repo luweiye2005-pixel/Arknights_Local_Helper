@@ -24,6 +24,13 @@ FLUSH PRIVILEGES;
 3. 复制 `backend/.env.example` → `backend/.env`，填写 `MYSQL_*`
 4. 可选：执行 `scripts/mysql_init.sql`（应用启动灌库时也会自动建表）
 
+首次建库后执行一次藏品规则修复迁移；脚本可重复运行，后续全量同步会保留这些 `approved` 规则：
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe ..\scripts\apply_relic_fix_plan.py
+```
+
 ## 启动
 
 ```powershell

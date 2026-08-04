@@ -20,6 +20,7 @@ class CombatModifiers:
 
     atk_pct: float = 0.0
     atk_flat: float = 0.0
+    def_flat: float = 0.0
     damage_pct: float = 0.0
     aspd: float = 0.0
     ignore_def_pct: float = 0.0
@@ -28,12 +29,15 @@ class CombatModifiers:
     arts_damage_pct: float = 0.0
     hp_pct: float = 0.0
     def_pct: float = 0.0
+    res_pct: float = 0.0
+    res_flat: float = 0.0
     notes: list[str] = field(default_factory=list)
 
     def merge(self, other: "CombatModifiers") -> "CombatModifiers":
         return CombatModifiers(
             atk_pct=self.atk_pct + other.atk_pct,
             atk_flat=self.atk_flat + other.atk_flat,
+            def_flat=self.def_flat + other.def_flat,
             damage_pct=self.damage_pct + other.damage_pct,
             aspd=self.aspd + other.aspd,
             ignore_def_pct=min(1.0, self.ignore_def_pct + other.ignore_def_pct),
@@ -42,6 +46,8 @@ class CombatModifiers:
             arts_damage_pct=self.arts_damage_pct + other.arts_damage_pct,
             hp_pct=self.hp_pct + other.hp_pct,
             def_pct=self.def_pct + other.def_pct,
+            res_pct=self.res_pct + other.res_pct,
+            res_flat=self.res_flat + other.res_flat,
             notes=self.notes + other.notes,
         )
 
@@ -175,7 +181,7 @@ def _resolve_param_values(
         ptype = p.get("type") or "number"
         if pid in user_vals:
             raw = user_vals[pid]
-        elif pid == "applies" and p.get("auto") and operator is not None:
+        elif p.get("auto") and operator is not None:
             raw = match_applies_auto(p.get("auto"), operator)
         else:
             raw = p.get("default", 0)
@@ -203,6 +209,12 @@ def _apply_attr_to_mod(mod: CombatModifiers, attr: str, value: float) -> None:
         mod.hp_pct += value
     elif attr == "def_pct":
         mod.def_pct += value
+    elif attr == "def_flat":
+        mod.def_flat += value
+    elif attr == "res_pct":
+        mod.res_pct += value
+    elif attr == "res_flat":
+        mod.res_flat += value
     elif attr == "aspd":
         mod.aspd += value
     elif attr == "damage_pct":
@@ -272,7 +284,9 @@ def build_relic_contributions(
     schemas = gdb.get_relic_condition_schemas()
     grouped: dict[str, dict[str, Any]] = {"operator_panel": {}, "enemy_panel": {}}
     conditional: list[dict[str, Any]] = []
-    damage: dict[str, list[dict[str, Any]]] = {"all": [], "PHYS": [], "MAGIC": [], "TRUE": []}
+    damage: dict[str, list[dict[str, Any]]] = {
+        "all": [], "PHYS": [], "MAGIC": [], "TRUE": [], "ELEMENTAL": []
+    }
     for base_id in relic_ids or []:
         resolved = gdb.resolve_relic_for_grade(base_id, equivalent_grade) or gdb.get_relic_row(base_id) or {"id": base_id, "name": base_id}
         rid, name = resolved.get("id") or base_id, resolved.get("name") or base_id
@@ -299,8 +313,11 @@ def build_relic_contributions(
                 "rule_version": int(rule.get("rule_version") or 1), "source": rule.get("source"),
             }
             attr, target = str(rule.get("attr") or ""), rule.get("target")
-            if attr in {"damage_pct", "phys_damage_pct", "arts_damage_pct", "true_damage_pct"}:
-                scope = {"phys_damage_pct": "PHYS", "arts_damage_pct": "MAGIC", "true_damage_pct": "TRUE"}.get(attr, "all")
+            if attr in {"damage_pct", "phys_damage_pct", "arts_damage_pct", "true_damage_pct", "elemental_damage_pct"}:
+                scope = {
+                    "phys_damage_pct": "PHYS", "arts_damage_pct": "MAGIC",
+                    "true_damage_pct": "TRUE", "elemental_damage_pct": "ELEMENTAL",
+                }.get(attr, "all")
                 item["factor"] = (1.0 + value) if (rule.get("operation") or "add") == "multiply" else (1.0 + value)
                 item["display"] = f"×{item['factor'] * 100:g}%"
                 damage[scope].append(item)
@@ -477,6 +494,7 @@ def _mod_has_values(mod: CombatModifiers) -> bool:
         [
             abs(mod.atk_pct) > 1e-12,
             abs(mod.atk_flat) > 1e-12,
+            abs(mod.def_flat) > 1e-12,
             abs(mod.damage_pct) > 1e-12,
             abs(mod.aspd) > 1e-12,
             abs(mod.ignore_def_pct) > 1e-12,
@@ -485,6 +503,8 @@ def _mod_has_values(mod: CombatModifiers) -> bool:
             abs(mod.arts_damage_pct) > 1e-12,
             abs(mod.hp_pct) > 1e-12,
             abs(mod.def_pct) > 1e-12,
+            abs(mod.res_pct) > 1e-12,
+            abs(mod.res_flat) > 1e-12,
         ]
     )
 
@@ -498,6 +518,7 @@ def _fill_mod_gaps(base: CombatModifiers, extra: CombatModifiers) -> CombatModif
     return CombatModifiers(
         atk_pct=base.atk_pct or extra.atk_pct,
         atk_flat=base.atk_flat or extra.atk_flat,
+        def_flat=base.def_flat or extra.def_flat,
         damage_pct=base.damage_pct or extra.damage_pct,
         aspd=base.aspd or extra.aspd,
         ignore_def_pct=base.ignore_def_pct or extra.ignore_def_pct,
@@ -506,6 +527,8 @@ def _fill_mod_gaps(base: CombatModifiers, extra: CombatModifiers) -> CombatModif
         arts_damage_pct=base.arts_damage_pct or extra.arts_damage_pct,
         hp_pct=base.hp_pct or extra.hp_pct,
         def_pct=base.def_pct or extra.def_pct,
+        res_pct=base.res_pct or extra.res_pct,
+        res_flat=base.res_flat or extra.res_flat,
         notes=base.notes + [n for n in extra.notes if n not in base.notes],
     )
 
@@ -763,6 +786,12 @@ def modifiers_from_effect_rows(rows: list[dict[str, Any]]) -> CombatModifiers:
             mod.hp_pct += val
         elif attr == "def_pct":
             mod.def_pct += val
+        elif attr == "def_flat":
+            mod.def_flat += val
+        elif attr == "res_pct":
+            mod.res_pct += val
+        elif attr == "res_flat":
+            mod.res_flat += val
         if row.get("note"):
             mod.notes.append(str(row["note"]))
     return mod
@@ -773,6 +802,7 @@ def _strip_operator_panel_attrs(mod: CombatModifiers) -> CombatModifiers:
     return CombatModifiers(
         atk_pct=0.0,
         atk_flat=0.0,
+        def_flat=0.0,
         damage_pct=mod.damage_pct,
         aspd=0.0,
         ignore_def_pct=mod.ignore_def_pct,
@@ -781,6 +811,8 @@ def _strip_operator_panel_attrs(mod: CombatModifiers) -> CombatModifiers:
         arts_damage_pct=mod.arts_damage_pct,
         hp_pct=0.0,
         def_pct=0.0,
+        res_pct=0.0,
+        res_flat=0.0,
         notes=list(mod.notes) + ["条件藏品:已剥离常驻面板"],
     )
 

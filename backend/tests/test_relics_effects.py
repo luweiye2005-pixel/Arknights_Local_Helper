@@ -51,6 +51,15 @@ def test_merge_caps_ignore_def():
     assert abs(a.merge(b).ignore_def_pct - 1.0) < 1e-6
 
 
+def test_operator_panel_flat_def_and_res_modifiers_merge():
+    a = CombatModifiers(def_flat=100, res_flat=10, res_pct=0.2)
+    b = CombatModifiers(def_flat=50, res_flat=-5, res_pct=0.1)
+    merged = a.merge(b)
+    assert merged.def_flat == 150
+    assert merged.res_flat == 5
+    assert abs(merged.res_pct - 0.3) < 1e-9
+
+
 def test_build_prefers_mysql_effects_when_present():
     relics = [{"id": "r1", "name": "假", "usage": "攻击力+99%"}]
     fake_rows = [{"relic_id": "r1", "target": "operator", "attr": "atk_pct", "value": 0.05, "note": "db"}]

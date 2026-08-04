@@ -49,6 +49,7 @@ class EnemyManual(BaseModel):
     arts_damage_taken_pct: float = 0
     arts_damage_reduction: float = 0
     true_damage_taken_pct: float = 0
+    elemental_damage_taken_pct: float = 0
 
 
 class PanelCalcRequest(BaseModel):

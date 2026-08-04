@@ -189,6 +189,24 @@ def test_auto_applies_profession_and_position():
     assert not match_applies_auto({"position": "MELEE"}, {"position": "RANGED"})
 
 
+def test_auto_rule_can_drive_multiple_named_condition_params():
+    schema = {
+        "params": [
+            {"id": "primary_applies", "type": "toggle", "default": False, "auto": {"profession": ["SPECIAL"]}},
+            {"id": "secondary_applies", "type": "toggle", "default": False, "auto": {"profession": ["CASTER"]}},
+        ],
+        "operator_effects": [
+            {"attr": "atk_pct", "value": 0.30, "when": "primary_applies"},
+            {"attr": "atk_pct", "value": 0.03, "when": "secondary_applies"},
+        ],
+    }
+    special = {"profession": "SPECIAL", "profession_cn": "特种"}
+    caster = {"profession": "CASTER", "profession_cn": "术师"}
+    with patch("app.combat.relics.load_relic_conditions", return_value={"dual": schema}):
+        assert abs(build_conditional_relic_modifiers(["dual"], {}, special).atk_pct - 0.30) < 1e-9
+        assert abs(build_conditional_relic_modifiers(["dual"], {}, caster).atk_pct - 0.03) < 1e-9
+
+
 def test_po_fu_chen_zhou_debuff_and_auto():
     from app.combat.relics import load_relic_conditions
 

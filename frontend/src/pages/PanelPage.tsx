@@ -34,6 +34,7 @@ import { maxEliteForOperator, maxLevelForElite } from "../utils/operatorCaps";
 import { skillAutofill } from "../utils/skillAutofill";
 import { errorMessage } from "../utils/errorMessage";
 import { usePanelPersistence } from "../hooks/usePanelPersistence";
+import { cleanGameText, selectEffectiveTalents, selectModuleEffects } from "../utils/moduleEffects";
 import type {
   DamageType,
   EnemyManual,
@@ -97,6 +98,7 @@ export default function PanelPage() {
     arts_damage_taken_pct: 0,
     arts_damage_reduction: 0,
     true_damage_taken_pct: 0,
+    elemental_damage_taken_pct: 0,
   });
   const [damageType, setDamageType] = useState<DamageType>("PHYS");
   const [moduleId, setModuleId] = useState<string>();
@@ -109,6 +111,7 @@ export default function PanelPage() {
   const [form] = Form.useForm();
   const eliteWatch = Form.useWatch("elite", form) ?? 0;
   const levelWatch = Form.useWatch("level", form) ?? 1;
+  const potentialWatch = Form.useWatch("potential", form) ?? 0;
 
   const maxElite = useMemo(
     () => maxEliteForOperator(operator?.phases?.length, operator?.rarity),
@@ -171,7 +174,7 @@ export default function PanelPage() {
           if (saved?.manualBonus) setManualBonus(saved.manualBonus as typeof manualBonus);
           if (saved?.skillManual) setSkillManual(saved.skillManual as typeof skillManual);
           if (saved?.enemyManual) setEnemyManual(saved.enemyManual as typeof enemyManual);
-          if (saved?.damageType) setDamageType(saved.damageType as "PHYS" | "MAGIC" | "TRUE");
+          if (saved?.damageType) setDamageType(saved.damageType);
           if (saved?.moduleId) setModuleId(saved.moduleId as string);
           if (saved?.moduleLevel != null) setModuleLevel(saved.moduleLevel as number);
           if (saved?.selectedSkillId) setSelectedSkillId(saved.selectedSkillId as string);
@@ -231,6 +234,11 @@ export default function PanelPage() {
     () => (operator?.modules || []).find((m) => m.id === moduleId),
     [operator, moduleId],
   );
+  const selectedModuleLevel = selectedModule?.levels?.find((level) => level.level === moduleLevel);
+  const currentTalents = useMemo(
+    () => selectEffectiveTalents(operator?.talents, Number(eliteWatch), Number(potentialWatch)),
+    [operator, eliteWatch, potentialWatch],
+  );
 
   useEffect(() => {
     if (!operator) return;
@@ -275,12 +283,13 @@ export default function PanelPage() {
       const next = { ...prev };
       for (const rid of relicIds) {
         const schema = schemas[rid];
-        const appliesParam = schema?.params?.find((p) => p.id === "applies" && p.auto);
-        if (!appliesParam?.auto) continue;
-        next[rid] = {
-          ...(next[rid] || {}),
-          applies: matchAppliesAuto(appliesParam.auto, op),
-        };
+        const autoParams = (schema?.params || []).filter((p) => p.auto);
+        if (!autoParams.length) continue;
+        const values = { ...(next[rid] || {}) };
+        for (const param of autoParams) {
+          if (param.auto) values[param.id] = matchAppliesAuto(param.auto, op);
+        }
+        next[rid] = values;
       }
       return next;
     });
@@ -435,6 +444,7 @@ export default function PanelPage() {
           arts_damage_taken_pct: (enemyManual.arts_damage_taken_pct || 0) / 100,
           arts_damage_reduction: (enemyManual.arts_damage_reduction || 0) / 100,
           true_damage_taken_pct: (enemyManual.true_damage_taken_pct || 0) / 100,
+          elemental_damage_taken_pct: (enemyManual.elemental_damage_taken_pct || 0) / 100,
         },
       });
       setResult(data);
@@ -531,11 +541,10 @@ export default function PanelPage() {
                 </Col>
               </Row>
               {selectedModule && (
-                <Paragraph type="secondary" style={{ marginTop: -8, marginBottom: 8, fontSize: 13 }}>
-                  模组效果：
-                  {selectedModule.levels
-                    ?.filter((l) => l.level === moduleLevel)
-                    .map((l) => {
+                <div style={{ marginTop: -8, marginBottom: 8, fontSize: 13, color: "var(--muted)" }}>
+                  <div>模组面板：{selectedModuleLevel
+                    ? (() => {
+                      const l = selectedModuleLevel;
                       const parts = [];
                       if (l.atk) parts.push(`ATK+${l.atk}`);
                       if (l.atk_pct) parts.push(`ATK+${(l.atk_pct * 100).toFixed(0)}%`);
@@ -543,17 +552,24 @@ export default function PanelPage() {
                       if (l.defense) parts.push(`DEF+${l.defense}`);
                       if (l.attack_speed) parts.push(`攻速+${l.attack_speed}`);
                       return parts.join(" · ") || "无面板数值";
-                    })}
-                </Paragraph>
+                    })()
+                    : "无面板数值"}</div>
+                  {selectModuleEffects(selectedModuleLevel?.trait_effects, Number(potentialWatch)).map((effect, i) => (
+                    <div key={`trait-${i}`}>特性更新：{cleanGameText(effect.description)}</div>
+                  ))}
+                  {selectModuleEffects(selectedModuleLevel?.talent_effects, Number(potentialWatch)).map((effect, i) => (
+                    <div key={`talent-${effect.talent_index ?? i}`}>
+                      天赋升级{effect.name ? `「${effect.name}」` : ""}：{cleanGameText(effect.description)}
+                    </div>
+                  ))}
+                </div>
               )}
-              {!!operator?.talents?.length && (
+              {!!currentTalents.length && (
                 <div style={{ marginBottom: 8, fontSize: 13, color: "var(--muted)" }}>
-                  {operator.talents
-                    .filter((t) => t.potential_rank === 0 && t.name)
-                    .map((t, i: number) => (
+                  {currentTalents.map((t, i: number) => (
                       <div key={i}>
-                        天赋{i + 1}：{t.name}
-                        {t.description ? ` — ${t.description}` : ""}
+                        当前天赋{i + 1}：{t.name}
+                        {t.description ? ` — ${cleanGameText(t.description)}` : ""}
                       </div>
                     ))}
                 </div>
@@ -663,6 +679,7 @@ export default function PanelPage() {
                         { value: "PHYS", label: "物理" },
                         { value: "MAGIC", label: "法术" },
                         { value: "TRUE", label: "真实" },
+                        { value: "ELEMENTAL", label: "元素" },
                       ]}
                     />
                   </Form.Item>
@@ -704,7 +721,9 @@ export default function PanelPage() {
                         ? "物理受伤加深%"
                         : damageType === "MAGIC"
                           ? "法术受伤加深%"
-                          : "真实受伤加深%"
+                          : damageType === "TRUE"
+                            ? "真实受伤加深%"
+                            : "元素受伤加深%"
                     }
                   >
                     <InputNumber
@@ -714,7 +733,9 @@ export default function PanelPage() {
                           ? enemyManual.phys_damage_taken_pct
                           : damageType === "MAGIC"
                             ? enemyManual.arts_damage_taken_pct
-                            : enemyManual.true_damage_taken_pct
+                            : damageType === "TRUE"
+                              ? enemyManual.true_damage_taken_pct
+                              : enemyManual.elemental_damage_taken_pct
                       }
                       onChange={(v) => {
                         const val = Number(v) || 0;
@@ -724,7 +745,9 @@ export default function PanelPage() {
                             ? { phys_damage_taken_pct: val }
                             : damageType === "MAGIC"
                               ? { arts_damage_taken_pct: val }
-                              : { true_damage_taken_pct: val }),
+                              : damageType === "TRUE"
+                                ? { true_damage_taken_pct: val }
+                                : { elemental_damage_taken_pct: val }),
                         }));
                       }}
                     />

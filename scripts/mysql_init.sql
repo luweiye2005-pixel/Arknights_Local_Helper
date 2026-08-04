@@ -125,6 +125,8 @@ CREATE TABLE IF NOT EXISTS module_levels (
   hp DOUBLE NOT NULL DEFAULT 0,
   defense DOUBLE NOT NULL DEFAULT 0,
   attack_speed DOUBLE NOT NULL DEFAULT 0,
+  trait_effects JSON NULL,
+  talent_effects JSON NULL,
   PRIMARY KEY (module_id, level),
   CONSTRAINT fk_ml_mod FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

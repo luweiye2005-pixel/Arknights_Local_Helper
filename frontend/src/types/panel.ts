@@ -1,4 +1,4 @@
-export type DamageType = "PHYS" | "MAGIC" | "TRUE";
+export type DamageType = "PHYS" | "MAGIC" | "TRUE" | "ELEMENTAL";
 
 export type ManualBonus = {
   atk_pct: number;
@@ -31,6 +31,7 @@ export type EnemyManual = {
   arts_damage_taken_pct: number;
   arts_damage_reduction: number;
   true_damage_taken_pct: number;
+  elemental_damage_taken_pct: number;
 };
 
 export type OperatorModuleLevel = {
@@ -41,6 +42,15 @@ export type OperatorModuleLevel = {
   defense?: number;
   atk_pct?: number;
   attack_speed?: number;
+  trait_effects?: ModuleEffectCandidate[];
+  talent_effects?: ModuleEffectCandidate[];
+};
+
+export type ModuleEffectCandidate = {
+  talent_index?: number;
+  name?: string;
+  description?: string;
+  potential_rank?: number;
 };
 
 export type OperatorModule = {
@@ -52,6 +62,8 @@ export type OperatorModule = {
 };
 
 export type OperatorTalent = {
+  index?: number;
+  unlock_elite?: number;
   name?: string;
   potential_rank?: number;
   description?: string;

@@ -389,6 +389,39 @@ class GameDataStore:
         levels = []
         for i, ph in enumerate(phases):
             bb = {b.get("key"): float(b.get("value") or 0) for b in (ph.get("attributeBlackboard") or []) if isinstance(b, dict)}
+            trait_effects: list[dict] = []
+            talent_effects: list[dict] = []
+            for part in ph.get("parts") or []:
+                if not isinstance(part, dict):
+                    continue
+                trait_bundle = part.get("overrideTraitDataBundle") or {}
+                for cand in trait_bundle.get("candidates") or []:
+                    if not isinstance(cand, dict):
+                        continue
+                    description = cand.get("additionalDescription") or cand.get("overrideDescripton") or ""
+                    if description:
+                        trait_effects.append(
+                            {
+                                "description": description,
+                                "potential_rank": int(cand.get("requiredPotentialRank") or 0),
+                                "blackboard": cand.get("blackboard") or [],
+                            }
+                        )
+                talent_bundle = part.get("addOrOverrideTalentDataBundle") or {}
+                for cand in talent_bundle.get("candidates") or []:
+                    if not isinstance(cand, dict) or cand.get("isHideTalent"):
+                        continue
+                    description = cand.get("upgradeDescription") or cand.get("description") or ""
+                    if description:
+                        talent_effects.append(
+                            {
+                                "talent_index": int(cand.get("talentIndex") or 0),
+                                "name": cand.get("name") or "",
+                                "description": description,
+                                "potential_rank": int(cand.get("requiredPotentialRank") or 0),
+                                "blackboard": cand.get("blackboard") or [],
+                            }
+                        )
             levels.append(
                 {
                     "level": int(ph.get("equipLevel") or (i + 1)),
@@ -398,6 +431,8 @@ class GameDataStore:
                     "defense": bb.get("def") or 0.0,
                     "attack_speed": bb.get("attack_speed") or 0.0,
                     "blackboard": ph.get("attributeBlackboard") or [],
+                    "trait_effects": _dedupe_module_effects(trait_effects, "description"),
+                    "talent_effects": _dedupe_module_effects(talent_effects, "talent_index", "description"),
                 }
             )
             # 部分模组用 atk 表示加算；若存在 attack@atk_scale 等由 blackboard 保留
@@ -413,6 +448,17 @@ class GameDataStore:
         if not levels:
             levels = [{"level": 1, "atk": 0, "atk_pct": 0, "hp": 0, "defense": 0, "attack_speed": 0, "blackboard": []}]
         return levels
+
+
+def _dedupe_module_effects(items: list[dict], *identity_fields: str) -> list[dict]:
+    seen: set[tuple] = set()
+    result: list[dict] = []
+    for item in items:
+        key = tuple(item.get(field) for field in identity_fields) + (item.get("potential_rank", 0),)
+        if key not in seen:
+            seen.add(key)
+            result.append(item)
+    return result
 
 
 def _read_json(path: Path) -> dict:

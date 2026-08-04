@@ -38,7 +38,7 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
     skill_manual = payload.get("skill_manual") or {}
     enemy_manual = payload.get("enemy_manual") or {}
     damage_type = payload.get("damage_type") or "PHYS"
-    if damage_type not in ("PHYS", "MAGIC", "TRUE"):
+    if damage_type not in ("PHYS", "MAGIC", "TRUE", "ELEMENTAL"):
         damage_type = "PHYS"
 
     skill_atk_pct = float(skill_manual.get("atk_pct") or 0)
@@ -178,9 +178,9 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         direct_atk_pct = total.atk_pct + skill_atk_pct
         combat_atk = base["atk"] * (1.0 + direct_atk_pct) + total.atk_flat
         final_hp = base["hp"] * (1.0 + total.hp_pct + skill_hp_pct)
-        final_def = base["def"] * (1.0 + total.def_pct + skill_def_pct)
+        final_def = base["def"] * (1.0 + total.def_pct + skill_def_pct) + total.def_flat
         final_aspd = base["attack_speed"] + total.aspd + skill_aspd
-        final_res = float(base["res"]) * (1.0 + skill_res_pct) + skill_res_flat
+        final_res = float(base["res"]) * (1.0 + total.res_pct + skill_res_pct) + total.res_flat + skill_res_flat
         final_interval = attack_interval(base["base_attack_time"], final_aspd)
 
         all_factor = float(contributions["damage_factors"]["all"]["product"])
@@ -224,6 +224,9 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
                 "atk_flat_from_relics": relic_mods.atk_flat,
                 "hp_pct_from_relics": relic_mods.hp_pct,
                 "def_pct_from_relics": relic_mods.def_pct,
+                "def_flat_from_relics": relic_mods.def_flat,
+                "res_pct_from_relics": relic_mods.res_pct,
+                "res_flat_from_relics": relic_mods.res_flat,
                 "aspd_from_relics": relic_mods.aspd,
                 "atk_pct_from_conditions": cond_mods.atk_pct,
                 "aspd_from_conditions": cond_mods.aspd,

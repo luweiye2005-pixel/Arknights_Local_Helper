@@ -102,7 +102,9 @@ function contributionLines(result?: PanelResult) {
       lines.push({ key: `${side}-${attr}`, title: `${side}藏品${contributionLabels[attr] || attr}加成`, formula: `${parts.join(" ")} = ${total}` });
     }
   }
-  const scopeLabels: Record<string, string> = { all: "通用", PHYS: "物理", MAGIC: "法术", TRUE: "真实" };
+  const scopeLabels: Record<string, string> = {
+    all: "通用", PHYS: "物理", MAGIC: "法术", TRUE: "真实", ELEMENTAL: "元素",
+  };
   for (const [scope, group] of Object.entries(data.damage_factors || {})) {
     if (!group.items?.length) continue;
     const parts = group.items.map((item) => `${item.display}（${item.name}${item.condition ? ` · ${item.condition}` : ""}）`);

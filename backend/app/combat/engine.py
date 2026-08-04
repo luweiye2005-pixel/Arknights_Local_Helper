@@ -8,7 +8,7 @@ from app.combat.attributes import calc_operator_panel, skill_multiplier_and_dura
 from app.combat.relics import CombatModifiers, build_relic_modifiers
 from app.data.store import get_store
 
-DamageType = Literal["PHYS", "MAGIC", "TRUE"]
+DamageType = Literal["PHYS", "MAGIC", "TRUE", "ELEMENTAL"]
 
 
 def physical_damage(
@@ -75,6 +75,7 @@ def calc_hit_damage(
     arts_damage_taken_pct: float = 0.0,
     arts_damage_reduction: float = 0.0,
     true_damage_taken_pct: float = 0.0,
+    elemental_damage_taken_pct: float = 0.0,
 ) -> dict[str, float]:
     """
     单次伤害结算。
@@ -83,7 +84,11 @@ def calc_hit_damage(
     真伤不吃物理免伤。
     """
     hit_atk = atk * scale
-    if damage_type == "TRUE":
+    if damage_type == "ELEMENTAL":
+        basic = hit_atk
+        taken = 1.0 + damage_pct + elemental_damage_taken_pct
+        reduction = 1.0
+    elif damage_type == "TRUE":
         basic = hit_atk
         taken = 1.0 + damage_pct + true_damage_taken_pct
         reduction = 1.0
@@ -134,7 +139,9 @@ def resolve_hit_from_panels(
     damage_scale_pct = float(skill_manual.get("damage_scale_pct") if skill_manual.get("damage_scale_pct") is not None else 100)
     final_mul = product_atk_scales([float(x) for x in scale_to if x is not None and float(x) > 0], damage_scale_pct)
 
-    dtype: DamageType = "TRUE" if true_damage else (damage_type if damage_type in ("PHYS", "MAGIC", "TRUE") else "PHYS")
+    dtype: DamageType = "TRUE" if true_damage else (
+        damage_type if damage_type in ("PHYS", "MAGIC", "TRUE", "ELEMENTAL") else "PHYS"
+    )
 
     ignore_def = float(enemy_manual.get("ignore_def_pct") or 0) + float(ignore_def_pct or 0)
     ignore_def = min(1.0, max(0.0, ignore_def))
@@ -156,6 +163,7 @@ def resolve_hit_from_panels(
         arts_damage_taken_pct=float(enemy_manual.get("arts_damage_taken_pct") or 0),
         arts_damage_reduction=float(enemy_manual.get("arts_damage_reduction") or 0),
         true_damage_taken_pct=float(enemy_manual.get("true_damage_taken_pct") or 0),
+        elemental_damage_taken_pct=float(enemy_manual.get("elemental_damage_taken_pct") or 0),
     )
 
     scale_bits = []
@@ -189,9 +197,12 @@ def resolve_hit_from_panels(
             f"乘区：×受伤加深{detail['taken_mul']:.4f} ×(1−法免){detail['reduction_mul']:.4f}"
             f" → 单次伤害={detail['final']:.2f}"
         )
-    else:
+    elif dtype == "TRUE":
         steps.append(f"真伤：结算ATK={detail['basic']:.2f}（不吃物理免伤）")
         steps.append(f"乘区：×受伤加深{detail['taken_mul']:.4f} → 单次伤害={detail['final']:.2f}")
+    else:
+        steps.append(f"元素伤害：结算值={detail['basic']:.2f}（不经过防御与法抗）")
+        steps.append(f"元素受伤加深×{detail['taken_mul']:.4f} → 单次元素伤害={detail['final']:.2f}")
 
     return {
         "damage_type": dtype,
