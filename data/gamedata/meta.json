@@ -1,12 +1,7 @@
 {
-  "synced_at": "2026-07-29T09:27:04.363597+00:00",
+  "synced_at": "2026-08-05T05:48:01.516996+00:00",
   "source": "Kengxxiao/ArknightsGameData",
-  "files_ok": 1,
-  "files_total": 1,
-  "levels": {
-    "ok": 3,
-    "skip": 434,
-    "fail": 156,
-    "total": 593
-  }
+  "files_ok": 7,
+  "files_total": 7,
+  "levels": null
 }
