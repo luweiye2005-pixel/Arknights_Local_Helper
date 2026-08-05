@@ -1,18 +1,19 @@
 # 明日方舟本地数据面板
+# 版本约束：下限为最低兼容版本，上限为下一个大版本（防 breaking changes）
 
-fastapi>=0.110.0
-uvicorn[standard]>=0.29.0
-python-multipart>=0.0.9
+fastapi>=0.110.0,<1.0.0
+uvicorn[standard]>=0.29.0,<1.0.0
+python-multipart>=0.0.9,<1.0.0
 
-pydantic>=2.7.0
-pydantic-settings>=2.3.0
-python-dotenv>=1.0.1
+pydantic>=2.7.0,<3.0.0
+pydantic-settings>=2.3.0,<3.0.0
+python-dotenv>=1.0.1,<2.0.0
 
-httpx>=0.27.0
-loguru>=0.7.0
-pytest>=8.0.0
+httpx>=0.27.0,<1.0.0
+loguru>=0.7.0,<1.0.0
+pytest>=8.0.0,<10.0.0
 
-SQLAlchemy>=2.0.0
-PyMySQL>=1.1.0
-pywebview>=5.3
-pyinstaller>=6.10
+SQLAlchemy>=2.0.0,<3.0.0
+PyMySQL>=1.1.0,<2.0.0
+pywebview>=5.3,<6.0.0
+pyinstaller>=6.10,<7.0.0

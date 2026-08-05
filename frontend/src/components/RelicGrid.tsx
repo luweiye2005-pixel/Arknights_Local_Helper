@@ -37,6 +37,8 @@ export default function RelicGrid({
   const [diffKey, setDiffKey] = useState<string>();
   const selected = useMemo(() => new Set(value), [value]);
   const reqId = useRef(0);
+  const equivRef = useRef(equivalentGrade);
+  equivRef.current = equivalentGrade;
 
   useEffect(() => {
     assetsStatus()
@@ -60,10 +62,20 @@ export default function RelicGrid({
           key: d.key || `${d.mode_difficulty}:${d.grade}`,
         }));
         setDifficulties(normalized);
-        const preferred = pickDefaultDifficulty(normalized);
-        if (preferred) {
-          setDiffKey(preferred.key);
-          onEquivalentGradeChange(preferred.equivalent_grade);
+        // Only reset difficulty if the restored equivalentGrade doesn't match
+        // any valid difficulty for this theme (e.g. after switching themes).
+        const current = equivRef.current;
+        const matching = normalized.find(
+          (d) => d.equivalent_grade === current,
+        );
+        if (!matching) {
+          const preferred = pickDefaultDifficulty(normalized);
+          if (preferred) {
+            setDiffKey(preferred.key);
+            onEquivalentGradeChange(preferred.equivalent_grade);
+          }
+        } else {
+          setDiffKey(matching.key);
         }
       })
       .catch(() => {

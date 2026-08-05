@@ -29,6 +29,7 @@ scripts/_mysql_bootstrap.sql
 
 # Node
 frontend/node_modules/
+.npm-cache/
 frontend/dist/
 frontend/tsconfig.tsbuildinfo
 

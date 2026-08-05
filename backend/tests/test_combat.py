@@ -94,7 +94,7 @@ def test_user_scenario_panel_then_hit():
 
 
 def test_phys_damage_amp_not_double_counted():
-    from app.combat.relics import parse_relic_text, _normalize_damage_amps
+    from app.combat.relics import parse_relic_text, normalize_damage_amps
 
     m = parse_relic_text("复仇者", "所有敌人受到的物理伤害+35%")
     assert abs(m.phys_damage_pct - 0.35) < 1e-9
@@ -104,7 +104,7 @@ def test_phys_damage_amp_not_double_counted():
     bad = __import__("app.combat.relics", fromlist=["CombatModifiers"]).CombatModifiers(
         damage_pct=0.35, phys_damage_pct=0.35
     )
-    _normalize_damage_amps(bad)
+    normalize_damage_amps(bad)
     assert abs(bad.phys_damage_pct - 0.35) < 1e-9
     assert abs(bad.damage_pct) < 1e-9
 

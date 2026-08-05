@@ -1,6 +1,7 @@
 param([switch]$AllowPending)
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+$env:npm_config_cache = Join-Path $Root ".npm-cache"
 $Python = Join-Path $Root "backend\.venv\Scripts\python.exe"
 function Invoke-Native {
   param([string]$Command, [Parameter(ValueFromRemainingArguments=$true)][string[]]$Arguments)
@@ -13,7 +14,11 @@ if (-not (Test-Path (Join-Path $Root "vendor\WebView2"))) {
 }
 
 Push-Location (Join-Path $Root "frontend")
-Invoke-Native npm.cmd ci
+$tsc = Join-Path $Root "frontend\node_modules\.bin\tsc.cmd"
+$vite = Join-Path $Root "frontend\node_modules\.bin\vite.cmd"
+if (-not (Test-Path -LiteralPath $tsc) -or -not (Test-Path -LiteralPath $vite)) {
+  Invoke-Native npm.cmd ci
+}
 Invoke-Native npm.cmd test -- --run
 Invoke-Native npm.cmd run build
 Pop-Location
@@ -21,12 +26,16 @@ Pop-Location
 $args = @((Join-Path $Root "scripts\desktop_data.py"), "build-data", "--output", (Join-Path $Root "release_data"))
 if ($AllowPending) { $args += "--allow-pending" }
 Invoke-Native $Python @args
+# 发布硬断言：pending_in_source==0 + SHA-256 校验
+Invoke-Native $Python (Join-Path $Root "scripts\desktop_data.py") validate
 $testTemp = Join-Path $Root ".desktop-pytest-temp"
 New-Item -ItemType Directory -Force -Path $testTemp | Out-Null
 $env:TEMP = $testTemp
 $env:TMP = $testTemp
-Invoke-Native $Python -m pytest (Join-Path $Root "backend\tests") -q -p no:cacheprovider --basetemp (Join-Path $testTemp "run")
-Invoke-Native $Python -m PyInstaller --clean --noconfirm (Join-Path $Root "desktop.spec")
+$pytestArgs = @("-m", "pytest", (Join-Path $Root "backend\tests"), "-q", "-p", "no:cacheprovider", "--basetemp", (Join-Path $testTemp "run"))
+Invoke-Native $Python @pytestArgs
+$pyinstallerArgs = @("-m", "PyInstaller", "--clean", "--noconfirm", (Join-Path $Root "desktop.spec"))
+Invoke-Native $Python @pyinstallerArgs
 
 $portable = Join-Path $Root "dist\ArknightsOfflinePanel"
 $smoke = Start-Process -FilePath (Join-Path $portable "ArknightsOfflinePanel.exe") -ArgumentList "--release-smoke-test" -Wait -PassThru

@@ -156,4 +156,5 @@ export type PanelPersistedState = {
   level?: number;
   favor_percent?: number;
   potential?: number;
+  result?: PanelResult;
 };

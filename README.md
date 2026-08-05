@@ -14,9 +14,10 @@
 
 ## 项目结构
 
-- `backend/app/combat`：Python 计算核心。
+- `backend/app/combat`：Python 计算核心；藏品模型、条件、解析与运行时合并按 `relic_*` 模块拆分。
+- `backend/app/data/mysql_*.py`：开发期 MySQL 连接、导入及按领域划分的查询层。
 - `backend/app/data/json_db.py`：桌面版只读数据层。
-- `frontend`：React 计算界面；桌面发布版不包含数据管理页面。
+- `frontend/src/pages/panel`：面板页面控制器与视图；桌面发布版不包含数据管理页面。
 - `scripts/desktop_data.py`：开发者数据维护命令。
 - `scripts/build_desktop.ps1`：Windows 测试、构建和打包。
 
@@ -40,6 +41,8 @@ cd backend
 迁移期间可用 `build-data --allow-pending` 生成对比测试包，但该选项不得用于正式 Release。
 
 ## 本地开发
+
+桌面开发版可直接双击仓库根目录的 `启动桌面开发版.bat`。脚本会构建前端、校验离线数据，并以前台日志模式启动桌面窗口。
 
 ```powershell
 cd backend

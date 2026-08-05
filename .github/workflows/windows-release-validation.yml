@@ -1,0 +1,38 @@
+name: windows-release-validation
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate-and-package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: pip install -r backend/requirements.txt
+
+      # 发布硬断言：pending==0 + SHA-256 + schema 版本
+      - run: python scripts/desktop_data.py validate
+
+      # 使用真实数据运行全套后端测试
+      - run: python -m pytest backend/tests -q
+
+      # 前端构建 + 测试
+      - working-directory: frontend
+        run: npm ci
+      - working-directory: frontend
+        run: npm test -- --run
+      - working-directory: frontend
+        run: npm run build
+
+      # 桌面打包 + 冒烟测试（使用真实数据）
+      - run: python -m PyInstaller --clean --noconfirm desktop.spec
+      - run: .\dist\ArknightsOfflinePanel\ArknightsOfflinePanel.exe --release-smoke-test

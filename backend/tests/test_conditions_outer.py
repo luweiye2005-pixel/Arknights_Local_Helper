@@ -25,7 +25,7 @@ def test_safe_eval_rejects_bad_nodes():
 
 def test_conditional_gold_cup_and_toggle():
     with patch(
-        "app.combat.relics.load_relic_conditions",
+        "app.combat.relic_conditions.load_relic_conditions",
         return_value={
             "r_gold": {
                 "name": "金",
@@ -202,7 +202,7 @@ def test_auto_rule_can_drive_multiple_named_condition_params():
     }
     special = {"profession": "SPECIAL", "profession_cn": "特种"}
     caster = {"profession": "CASTER", "profession_cn": "术师"}
-    with patch("app.combat.relics.load_relic_conditions", return_value={"dual": schema}):
+    with patch("app.combat.relic_conditions.load_relic_conditions", return_value={"dual": schema}):
         assert abs(build_conditional_relic_modifiers(["dual"], {}, special).atk_pct - 0.30) < 1e-9
         assert abs(build_conditional_relic_modifiers(["dual"], {}, caster).atk_pct - 0.03) < 1e-9
 

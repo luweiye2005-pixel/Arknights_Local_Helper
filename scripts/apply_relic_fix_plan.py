@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 from app.data.mysql_db import get_engine, init_schema  # noqa: E402
 
-VERSION = 3
+VERSION = 5
 
 
 def reset(conn, relic_id: str) -> None:
@@ -455,6 +455,540 @@ def apply_rogue6_audit_fixes(conn) -> None:
     ignored(conn, "rogue_6_relic_legacy_94", "仅影响探索失败续行流程，不影响敌我面板或最终伤害")
 
 
+# ---------------------------------------------------------------------------
+# Pending review fixes (VERSION 5): 118 relics / 159 rules
+# ---------------------------------------------------------------------------
+
+
+def _approve_existing_rules(conn, relic_ids: list[str], note: str = "pending review fix v5") -> None:
+    """Bulk-approve existing pending rules by setting review_status='approved'."""
+    if not relic_ids:
+        return
+    conn.execute(
+        text(
+            """
+            UPDATE relic_effect_rules SET review_status='approved', rule_version=:v,
+              reviewed_at=NOW(), note=:note
+            WHERE relic_id IN :ids AND review_status<>'approved'
+            """
+        ),
+        {"v": VERSION, "ids": tuple(relic_ids), "note": note},
+    )
+
+
+def _get_approved_twin_rules(conn, relic_id: str) -> list[dict] | None:
+    """Find an approved twin relic (same name, same usage_text)."""
+    row = conn.execute(
+        text(
+            """
+            SELECT twin.id AS twin_id, twin.name AS twin_name
+            FROM relics r
+            JOIN relics twin ON twin.name = r.name AND twin.id <> r.id
+              AND COALESCE(twin.usage_text, '') = COALESCE(r.usage_text, '')
+            JOIN relic_effect_rules approved ON approved.relic_id = twin.id
+            WHERE r.id = :rid
+              AND approved.review_status = 'approved'
+              AND approved.calculation_status = 'active'
+            LIMIT 1
+            """
+        ),
+        {"rid": relic_id},
+    ).mappings().first()
+    if not row:
+        return None
+    twin_id = row["twin_id"]
+    rules = conn.execute(
+        text(
+            """
+            SELECT target, attr, operation, value, value_expr, when_param,
+                   display_order, note
+            FROM relic_effect_rules
+            WHERE relic_id = :tid AND review_status = 'approved'
+              AND calculation_status = 'active'
+            ORDER BY display_order, id
+            """
+        ),
+        {"tid": twin_id},
+    ).mappings().all()
+    params = conn.execute(
+        text(
+            """
+            SELECT param_id, param_type, label, default_value, min_value,
+                   max_value, step_value, unit, auto_rule, display_order
+            FROM relic_condition_params
+            WHERE relic_id = :tid AND review_status = 'approved'
+            ORDER BY display_order, param_id
+            """
+        ),
+        {"tid": twin_id},
+    ).mappings().all()
+    return [dict(r) for r in rules], [dict(p) for p in params]
+
+
+def _copy_twin_rules(conn, relic_id: str, twin_rules: list[dict], twin_params: list[dict]) -> None:
+    """Reset pending relic and copy approved twin's rules and params."""
+    reset(conn, relic_id)
+    for r in twin_rules:
+        conn.execute(
+            text(
+                """
+                INSERT INTO relic_effect_rules(
+                  relic_id, target, attr, operation, value, value_expr, when_param,
+                  calculation_status, source, rule_version, review_status,
+                  display_order, note, reviewed_at
+                ) VALUES(:rid, :target, :attr, :operation, :value, :expr, :when,
+                  'active', 'manual', :version, 'approved', :ord, :note, NOW())
+                """
+            ),
+            {
+                "rid": relic_id,
+                "target": r["target"],
+                "attr": r["attr"],
+                "operation": r.get("operation", "add"),
+                "value": r.get("value", 0),
+                "expr": r.get("value_expr"),
+                "when": r.get("when_param"),
+                "version": VERSION,
+                "ord": r.get("display_order", 0),
+                "note": f"twin copy from approved {r.get('note', '')}",
+            },
+        )
+    for p in twin_params:
+        auto_rule = p.get("auto_rule")
+        if isinstance(auto_rule, str):
+            auto_rule = json.loads(auto_rule) if auto_rule else None
+        param(
+            conn, relic_id, p["param_id"], p.get("label", ""),
+            param_type=p.get("param_type", "toggle"),
+            default=float(p.get("default_value", 0)),
+            minimum=p.get("min_value"),
+            maximum=p.get("max_value"),
+            step=p.get("step_value"),
+            unit=p.get("unit"),
+            auto=auto_rule,
+            order=p.get("display_order", 0),
+        )
+
+
+def _apply_twin_copies(conn) -> int:
+    """Phase 1: copy approved twin rules to pending relics. Returns count fixed."""
+    pending_twins = conn.execute(
+        text(
+            """
+            SELECT DISTINCT r.id AS relic_id
+            FROM relics r
+            JOIN relic_effect_rules rr ON rr.relic_id = r.id
+            JOIN relics twin ON twin.name = r.name AND twin.id <> r.id
+              AND COALESCE(twin.usage_text, '') = COALESCE(r.usage_text, '')
+            JOIN relic_effect_rules approved ON approved.relic_id = twin.id
+            WHERE rr.review_status <> 'approved'
+              AND rr.calculation_status = 'active'
+              AND approved.review_status = 'approved'
+              AND approved.calculation_status = 'active'
+            """
+        )
+    ).mappings().all()
+    seen: set[str] = set()
+    for row in pending_twins:
+        rid = row["relic_id"]
+        if rid in seen:
+            continue
+        twin_data = _get_approved_twin_rules(conn, rid)
+        if twin_data:
+            seen.add(rid)
+            twin_rules, twin_params = twin_data
+            _copy_twin_rules(conn, rid, twin_rules, twin_params)
+    return len(seen)
+
+
+def _fix_rogue1_curse_relics(conn) -> None:
+    """rogue_1 curse relics: only enemies are buffed, not operators.
+
+    All of these relics describe "所有敌方单位" (all enemy units) in their
+    usage text.  The old parsed rules incorrectly applied HP% and DEF% to
+    operators as well — that was a text-parsing bug.
+    """
+    # c05/c11 were approved by a previous migration audit with operator rules
+    # that contradict the description.  Reset and rebuild them too.
+    curse_values = {
+        "rogue_1_relic_c03": 0.30,
+        "rogue_1_relic_c04": 0.25,
+        "rogue_1_relic_c05": 0.25,  # 浅眠好梦 — was wrongly approved with operator rules
+        "rogue_1_relic_c06": 0.30,
+        "rogue_1_relic_c07": 0.35,
+        "rogue_1_relic_c09": 0.35,
+        "rogue_1_relic_c10": 0.30,
+        "rogue_1_relic_c11": 0.30,  # 浅眠好梦（重铸）— was wrongly approved with operator rules
+        "rogue_1_relic_c12": 0.35,
+    }
+    for relic_id, value in curse_values.items():
+        reset(conn, relic_id)
+        for order, attr in enumerate(("atk_pct", "def_pct", "hp_pct")):
+            rule(conn, relic_id, "enemy", attr, value, order=order,
+                 note="pending review fix v5: curse relic enemy-only buff")
+
+    # 乌萨斯弯刀（重铸）: base 35% + 10% per floor, emergency -5% (min 35%)
+    reset(conn, "rogue_1_relic_c07")
+    param(conn, "rogue_1_relic_c07", "floors", "已进入新一层数（每层+10%）",
+          param_type="number", maximum=99)
+    param(conn, "rogue_1_relic_c07", "emergency_count", "完成紧急作战次数（每次-5%，最低35%）",
+          param_type="number", maximum=99, order=1)
+    rule(conn, "rogue_1_relic_c07", "enemy", "atk_pct",
+         expr="max(0.35, 0.35+floors*0.10-emergency_count*0.05)", order=0,
+         note="pending review fix v5: floor-scaling enemy buff")
+    rule(conn, "rogue_1_relic_c07", "enemy", "def_pct",
+         expr="max(0.35, 0.35+floors*0.10-emergency_count*0.05)", order=1,
+         note="pending review fix v5: floor-scaling enemy buff")
+    rule(conn, "rogue_1_relic_c07", "enemy", "hp_pct",
+         expr="max(0.35, 0.35+floors*0.10-emergency_count*0.05)", order=2,
+         note="pending review fix v5: floor-scaling enemy buff")
+
+
+def _fix_simple_permanent_stats(conn) -> None:
+    """Relics with simple permanent operator stats, no conditions."""
+    simple_ids = [
+        "rogue_1_relic_m05",       # 断剑: hp_pct -0.3
+        "rogue_2_relic_fight_41",  # 分浪: hp_pct -0.25
+        "rogue_3_relic_fight_6",   # 永夜的窥视: atk_pct +25%, aspd +25
+        "rogue_3_relic_fight_7",   # 枯木的回声: hp_pct -25%
+        "rogue_3_relic_explore_6", # 安玛的爱: atk/hp/def +1%
+    ]
+    _approve_existing_rules(conn, simple_ids)
+
+    # 决心: needs res_flat +20 added
+    reset(conn, "rogue_2_relic_grace_88")
+    for order, (attr, value) in enumerate([
+        ("hp_pct", 1.20), ("def_pct", 1.20), ("res_flat", 20),
+    ]):
+        rule(conn, "rogue_2_relic_grace_88", "operator", attr, value, order=order,
+             note="pending review fix v5")
+
+
+def _approve_series_relics(conn) -> None:
+    """Bulk-approve terrain/shell/forest/church series across rogue_2–rogue_6."""
+    # 地形图: "可同时部署人数+1, 所有我方单位的防御力+X%"
+    terrain = [
+        "rogue_2_relic_grace_7",
+        "rogue_3_relic_legacy_16", "rogue_3_relic_legacy_16_a", "rogue_3_relic_legacy_16_b",
+        "rogue_4_relic_legacy_15", "rogue_4_relic_legacy_15_a", "rogue_4_relic_legacy_15_b", "rogue_4_relic_legacy_15_c",
+        "rogue_5_relic_legacy_33", "rogue_5_relic_legacy_33_a", "rogue_5_relic_legacy_33_b", "rogue_5_relic_legacy_33_c",
+        "rogue_6_relic_legacy_28", "rogue_6_relic_legacy_28_a", "rogue_6_relic_legacy_28_b", "rogue_6_relic_legacy_28_c",
+    ]
+    # 神音海螺: "可同时部署人数+1, 所有我方单位的生命值+X%"
+    shell = [
+        "rogue_2_relic_grace_8",
+        "rogue_3_relic_legacy_17", "rogue_3_relic_legacy_17_a", "rogue_3_relic_legacy_17_b",
+        "rogue_4_relic_legacy_16", "rogue_4_relic_legacy_16_a", "rogue_4_relic_legacy_16_b", "rogue_4_relic_legacy_16_c",
+        "rogue_5_relic_legacy_34", "rogue_5_relic_legacy_34_a", "rogue_5_relic_legacy_34_b", "rogue_5_relic_legacy_34_c",
+        "rogue_6_relic_legacy_29", "rogue_6_relic_legacy_29_a", "rogue_6_relic_legacy_29_b", "rogue_6_relic_legacy_29_c",
+    ]
+    # 林间夜话: "可同时部署人数+2, 所有我方单位的防御力+X%"
+    forest = [
+        "rogue_2_relic_grace_9",
+        "rogue_3_relic_legacy_18", "rogue_3_relic_legacy_18_a", "rogue_3_relic_legacy_18_b",
+        "rogue_4_relic_legacy_17", "rogue_4_relic_legacy_17_a", "rogue_4_relic_legacy_17_b", "rogue_4_relic_legacy_17_c",
+        "rogue_5_relic_legacy_35", "rogue_5_relic_legacy_35_a", "rogue_5_relic_legacy_35_b", "rogue_5_relic_legacy_35_c",
+        "rogue_6_relic_legacy_30", "rogue_6_relic_legacy_30_a", "rogue_6_relic_legacy_30_b", "rogue_6_relic_legacy_30_c",
+    ]
+    # 教堂救济餐券: "可同时部署人数+2, 所有我方单位的生命值+X%"
+    church = [
+        "rogue_2_relic_grace_10",
+        "rogue_3_relic_legacy_19", "rogue_3_relic_legacy_19_a", "rogue_3_relic_legacy_19_b",
+        "rogue_4_relic_legacy_18", "rogue_4_relic_legacy_18_a", "rogue_4_relic_legacy_18_b", "rogue_4_relic_legacy_18_c",
+        "rogue_5_relic_legacy_36", "rogue_5_relic_legacy_36_a", "rogue_5_relic_legacy_36_b", "rogue_5_relic_legacy_36_c",
+        "rogue_6_relic_legacy_31", "rogue_6_relic_legacy_31_a", "rogue_6_relic_legacy_31_b", "rogue_6_relic_legacy_31_c",
+    ]
+    all_series = terrain + shell + forest + church
+    _approve_existing_rules(conn, all_series, note="series relic v5: deployment count is meta, stat is permanent")
+
+
+def _fix_stacking_relics(conn) -> None:
+    """Relics needing number-type params with per-unit stacking expressions."""
+    # 蓝卡坞安全衣: per 遭诅古物 def%+25, res_flat+10
+    reset(conn, "rogue_2_relic_fight_142")
+    param(conn, "rogue_2_relic_fight_142", "cursed_count", "当前拥有遭诅古物数量",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_2_relic_fight_142", "operator", "def_pct", expr="cursed_count*0.25", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_2_relic_fight_142", "operator", "res_flat", expr="cursed_count*10", order=1,
+         note="pending review fix v5")
+
+    # 刀光剑影: per 遭诅古物 aspd+35
+    reset(conn, "rogue_2_relic_fight_143")
+    param(conn, "rogue_2_relic_fight_143", "cursed_count", "当前拥有遭诅古物数量",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_2_relic_fight_143", "operator", "aspd", expr="cursed_count*35",
+         note="pending review fix v5")
+
+    # 断杖-和声 (rogue_3): per 术师 arts_damage+12% (max 8)
+    reset(conn, "rogue_3_relic_book_7")
+    param(conn, "rogue_3_relic_book_7", "count", "场上术师数量", param_type="number", maximum=8)
+    rule(conn, "rogue_3_relic_book_7", "operator", "arts_damage_pct", expr="count*0.12",
+         note="pending review fix v5")
+
+    # 断杖-波纹 (rogue_4/5): same pattern as rogue_6_relic_legacy_73
+    for relic_id in ["rogue_4_relic_book_3", "rogue_5_relic_legacy_47"]:
+        reset(conn, relic_id)
+        param(conn, relic_id, "count", "场上术师数量", param_type="number", maximum=8)
+        rule(conn, relic_id, "operator", "arts_damage_pct", expr="count*0.12",
+             note="pending review fix v5")
+
+    # 束灵骨 (rogue_4): per 思绪 atk+3%
+    reset(conn, "rogue_4_relic_fight_21")
+    param(conn, "rogue_4_relic_fight_21", "thought_count", "当前携带思绪数量",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_4_relic_fight_21", "operator", "atk_pct", expr="thought_count*0.03",
+         note="pending review fix v5")
+
+    # 生命熔炉之薪 (rogue_4): per 思绪 atk+5%
+    reset(conn, "rogue_4_relic_fight_22")
+    param(conn, "rogue_4_relic_fight_22", "thought_count", "当前携带思绪数量",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_4_relic_fight_22", "operator", "atk_pct", expr="thought_count*0.05",
+         note="pending review fix v5")
+
+    # 青涩眷恋 (rogue_4): per 思绪 hp+3%, def+3%
+    reset(conn, "rogue_4_relic_fight_25")
+    param(conn, "rogue_4_relic_fight_25", "thought_count", "当前携带思绪数量",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_4_relic_fight_25", "operator", "hp_pct", expr="thought_count*0.03", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_4_relic_fight_25", "operator", "def_pct", expr="thought_count*0.03", order=1,
+         note="pending review fix v5")
+
+    # 咒仪溯兽 (rogue_4): base 5 aspd + stacking 5 per layer (max 10 layers)
+    reset(conn, "rogue_4_relic_fight_26")
+    param(conn, "rogue_4_relic_fight_26", "stacks", "灵感消耗层数（可叠加10次）",
+          param_type="number", maximum=10)
+    rule(conn, "rogue_4_relic_fight_26", "operator", "aspd", expr="5+stacks*5",
+         note="pending review fix v5")
+
+    # 琥珀伤痕 (rogue_3): per excess 抗干扰指数 hp+8%, atk+8%
+    reset(conn, "rogue_3_relic_res_12")
+    param(conn, "rogue_3_relic_res_12", "excess", "抗干扰指数超出上限点数",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_3_relic_res_12", "operator", "atk_pct", expr="excess*0.08", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_3_relic_res_12", "operator", "hp_pct", expr="excess*0.08", order=1,
+         note="pending review fix v5")
+
+    # 酿山河 (rogue_5): per 花钱 atk+10%, hp+20%
+    reset(conn, "rogue_5_relic_speg_4")
+    param(conn, "rogue_5_relic_speg_4", "coin_count", "钱盒内花钱数量",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_5_relic_speg_4", "operator", "atk_pct", expr="coin_count*0.10", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_5_relic_speg_4", "operator", "hp_pct", expr="coin_count*0.20", order=1,
+         note="pending review fix v5")
+
+    # 家常小炒 (rogue_5): base 20% + 10% per combat
+    reset(conn, "rogue_5_relic_explore_3")
+    param(conn, "rogue_5_relic_explore_3", "combat_count", "已通过岁兽残识战斗场次",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_5_relic_explore_3", "operator", "atk_pct", expr="0.20+combat_count*0.10", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_5_relic_explore_3", "operator", "hp_pct", expr="0.20+combat_count*0.10", order=1,
+         note="pending review fix v5")
+
+    # 仇名录 (rogue_6): base 2% + 0.2% per kill (max +200%)
+    reset(conn, "rogue_6_relic_artifact_7")
+    param(conn, "rogue_6_relic_artifact_7", "bonus_pct", "当前永久攻击力额外加成",
+          param_type="number", maximum=200, unit="%")
+    rule(conn, "rogue_6_relic_artifact_7", "operator", "atk_pct", expr="0.02+bonus_pct/100",
+         note="pending review fix v5")
+
+    # 近卫军帽 (rogue_1): per deployment hp+25%
+    reset(conn, "rogue_1_relic_sp02")
+    param(conn, "rogue_1_relic_sp02", "deploy_count", "本局战斗中部署次数",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_1_relic_sp02", "operator", "hp_pct", expr="deploy_count*0.25",
+         note="pending review fix v5")
+
+
+def _fix_hp_threshold_relics(conn) -> None:
+    """HP-threshold scaling relics: bonus_pct number param + expr."""
+    # 古乔治营养原浆 (rogue_2/4/5): HP越高ATK越高, max +30%
+    for relic_id in ["rogue_2_relic_fight_140", "rogue_4_relic_legacy_181", "rogue_5_relic_return_20"]:
+        reset(conn, relic_id)
+        param(conn, relic_id, "bonus_pct", "当前根据生命值获得的攻击力加成",
+              param_type="number", maximum=30, unit="%")
+        rule(conn, relic_id, "operator", "atk_pct", expr="bonus_pct/100",
+             note="pending review fix v5: HP% to ATK%")
+
+    # 紧急活性剂 (rogue_2/4/5/6): HP越低ASPD越快, max +60 (rogue_6: +100)
+    for relic_id, max_val in [
+        ("rogue_2_relic_fight_141", 60), ("rogue_4_relic_legacy_182", 60),
+        ("rogue_5_relic_return_19", 60), ("rogue_6_relic_legacy_102", 100),
+    ]:
+        reset(conn, relic_id)
+        param(conn, relic_id, "bonus_aspd", "当前根据生命值获得的攻击速度加成",
+              param_type="number", maximum=max_val)
+        rule(conn, relic_id, "operator", "aspd", expr="bonus_aspd",
+             note="pending review fix v5: HP% to ASPD")
+
+    # 热辣可可 (rogue_6): HP越低ATK越高, max +150%
+    reset(conn, "rogue_6_relic_fight_14")
+    param(conn, "rogue_6_relic_fight_14", "bonus_pct", "当前根据生命值获得的攻击力加成",
+          param_type="number", maximum=150, unit="%")
+    rule(conn, "rogue_6_relic_fight_14", "operator", "atk_pct", expr="bonus_pct/100",
+         note="pending review fix v5: HP% to ATK%")
+
+
+def _fix_conditional_toggle_relics(conn) -> None:
+    """Relics needing toggle params with when-conditions."""
+    # 噤声 (rogue_1): same usage_text as 黑色郁金香 — 技能未开启时攻击力逐渐提升
+    reset(conn, "rogue_1_relic_n15")
+    param(conn, "rogue_1_relic_n15", "bonus_pct", "当前逐渐提升的攻击力加成",
+          param_type="number", maximum=60, unit="%")
+    rule(conn, "rogue_1_relic_n15", "operator", "atk_pct", expr="bonus_pct/100",
+         note="pending review fix v5")
+
+    # 深蓝之树 (rogue_2): unconditional enemy.aspd+15, just approve
+    _approve_existing_rules(conn, ["rogue_2_relic_curse_10"],
+                            note="pending review fix v5: unconditional enemy aspd")
+
+    # 遗落之帜 (rogue_2): random chosen tile
+    reset(conn, "rogue_2_relic_fight_128")
+    param(conn, "rogue_2_relic_fight_128", "on_chosen_tile", "当前干员位于本局随机选中位置")
+    rule(conn, "rogue_2_relic_fight_128", "operator", "atk_pct", 0.50, when="on_chosen_tile", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_2_relic_fight_128", "operator", "aspd", 50, when="on_chosen_tile", order=1,
+         note="pending review fix v5")
+
+    # 丝契之谜 (rogue_4): no adjacent ops → aspd+50
+    reset(conn, "rogue_4_relic_encounter_8")
+    param(conn, "rogue_4_relic_encounter_8", "no_adjacent_ops", "当前干员周围8格不存在其他干员")
+    rule(conn, "rogue_4_relic_encounter_8", "operator", "aspd", 50, when="no_adjacent_ops",
+         note="pending review fix v5")
+
+    # 死仇时代的恨意 (rogue_4): missing operator.atk_pct, both sides +20%
+    reset(conn, "rogue_4_relic_explore_3")
+    rule(conn, "rogue_4_relic_explore_3", "operator", "atk_pct", 0.20, order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_4_relic_explore_3", "enemy", "atk_pct", 0.20, order=1,
+         note="pending review fix v5")
+
+    # 无封长盒 (rogue_5): fix operator.aspd→enemy, add elite/leader toggle
+    reset(conn, "rogue_5_relic_final_5")
+    param(conn, "rogue_5_relic_final_5", "enemy_is_elite_leader", "当前敌人为精英或领袖")
+    rule(conn, "rogue_5_relic_final_5", "enemy", "def_pct", 0.30, when="enemy_is_elite_leader", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_5_relic_final_5", "enemy", "aspd", 20, when="enemy_is_elite_leader", order=1,
+         note="pending review fix v5")
+
+    # 四方绘料 (rogue_5): 4 deployed → next deploy gets buff
+    reset(conn, "rogue_5_relic_cardg_1")
+    param(conn, "rogue_5_relic_cardg_1", "is_next_deploy", "当前干员为已部署4名后的下一名干员")
+    rule(conn, "rogue_5_relic_cardg_1", "operator", "hp_pct", 0.50, when="is_next_deploy", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_5_relic_cardg_1", "operator", "def_pct", 0.50, when="is_next_deploy", order=1,
+         note="pending review fix v5")
+
+    # 四时丹青毫 (rogue_5): same pattern
+    reset(conn, "rogue_5_relic_cardg_2")
+    param(conn, "rogue_5_relic_cardg_2", "is_next_deploy", "当前干员为已部署4名后的下一名干员")
+    rule(conn, "rogue_5_relic_cardg_2", "operator", "atk_pct", 0.50, when="is_next_deploy",
+         note="pending review fix v5")
+
+    # 艺影 (rogue_5): leftmost in deployment queue
+    reset(conn, "rogue_5_relic_cardg_5")
+    param(conn, "rogue_5_relic_cardg_5", "is_leftmost_deploy", "当前干员为待部署区最左侧单位")
+    rule(conn, "rogue_5_relic_cardg_5", "operator", "atk_pct", 0.30, when="is_leftmost_deploy", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_5_relic_cardg_5", "operator", "aspd", 30, when="is_leftmost_deploy", order=1,
+         note="pending review fix v5")
+
+    # 商影 (rogue_5): rightmost in deployment queue
+    reset(conn, "rogue_5_relic_cardg_6")
+    param(conn, "rogue_5_relic_cardg_6", "is_rightmost_deploy", "当前干员为待部署区最右侧单位")
+    rule(conn, "rogue_5_relic_cardg_6", "operator", "hp_pct", 0.50, when="is_rightmost_deploy", order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_5_relic_cardg_6", "operator", "def_pct", 0.50, when="is_rightmost_deploy", order=1,
+         note="pending review fix v5")
+
+    # 封神令 (rogue_5): near intrusion point
+    reset(conn, "rogue_5_relic_fight_1")
+    param(conn, "rogue_5_relic_fight_1", "near_intrusion", "当前干员部署在侵入点周围8格")
+    rule(conn, "rogue_5_relic_fight_1", "operator", "atk_pct", 1.00, when="near_intrusion",
+         note="pending review fix v5")
+
+    # 奔兽战车 (rogue_5): DP ≥ 99
+    reset(conn, "rogue_5_relic_richg_4")
+    param(conn, "rogue_5_relic_richg_4", "high_cost", "当前部署费用为99及以上")
+    rule(conn, "rogue_5_relic_richg_4", "operator", "hp_pct", 0.50, when="high_cost",
+         note="pending review fix v5")
+
+    # 襁褓九头蛇 (rogue_6): enemy atk+30% hp+30%, per-region operator atk+10% hp+10%
+    reset(conn, "rogue_6_start_4")
+    param(conn, "rogue_6_start_4", "region_count", "已进入新区域次数",
+          param_type="number", maximum=99)
+    rule(conn, "rogue_6_start_4", "enemy", "atk_pct", 0.30, order=0,
+         note="pending review fix v5")
+    rule(conn, "rogue_6_start_4", "enemy", "hp_pct", 0.30, order=1,
+         note="pending review fix v5")
+    rule(conn, "rogue_6_start_4", "operator", "atk_pct", expr="region_count*0.10", order=2,
+         note="pending review fix v5")
+    rule(conn, "rogue_6_start_4", "operator", "hp_pct", expr="region_count*0.10", order=3,
+         note="pending review fix v5")
+
+
+def apply_pending_review_fixes(conn) -> None:
+    """Handle all 118 pending relics (159 rules) from release-rule-review.md audit.
+
+    This is the VERSION=5 comprehensive review pass.  It runs after all
+    earlier fix functions and is designed to be idempotent — re-running is
+    safe and will not duplicate rules.
+    """
+    # Phase 1: Copy rules from approved twins (same name + same usage_text).
+    twin_count = _apply_twin_copies(conn)
+    print(f"[pending-review] Phase 1: copied approved twin rules for {twin_count} relics")
+
+    # Phase 2: Category-specific fixes for the remaining pending relics.
+    remaining_before = conn.execute(
+        text(
+            """
+            SELECT COUNT(*) FROM relic_effect_rules
+            WHERE review_status <> 'approved' AND calculation_status = 'active'
+            """
+        )
+    ).scalar()
+    print(f"[pending-review] Phase 2: {remaining_before} rules still pending after twin copy")
+
+    _fix_rogue1_curse_relics(conn)
+    _fix_simple_permanent_stats(conn)
+    _approve_series_relics(conn)
+    _fix_stacking_relics(conn)
+    _fix_hp_threshold_relics(conn)
+    _fix_conditional_toggle_relics(conn)
+
+    # Safety check: report any relics still pending after all fixes.
+    remaining_after = conn.execute(
+        text(
+            """
+            SELECT COUNT(*) FROM relic_effect_rules
+            WHERE review_status <> 'approved' AND calculation_status = 'active'
+            """
+        )
+    ).scalar()
+    if remaining_after:
+        details = conn.execute(
+            text(
+                """
+                SELECT DISTINCT rr.relic_id, r.name
+                FROM relic_effect_rules rr
+                JOIN relics r ON r.id = rr.relic_id
+                WHERE rr.review_status <> 'approved' AND rr.calculation_status = 'active'
+                ORDER BY rr.relic_id
+                """
+            )
+        ).mappings().all()
+        for d in details:
+            print(f"  STILL PENDING: {d['relic_id']} ({d['name']})")
+        print(f"[pending-review] WARNING: {remaining_after} rules still pending after all fixes!")
+    else:
+        print("[pending-review] All pending rules resolved. Ready for release build.")
+
+
 def main() -> None:
     init_schema()
     with get_engine().begin() as conn:
@@ -464,6 +998,7 @@ def main() -> None:
         apply_hand_fixes(conn)
         apply_user_reported_fixes(conn)
         apply_rogue6_audit_fixes(conn)
+        apply_pending_review_fixes(conn)
         counts = conn.execute(
             text(
                 """

@@ -13,10 +13,13 @@ def resource_root() -> Path:
 
 
 root = resource_root()
+frozen = hasattr(sys, "_MEIPASS")
+frontend_dir = root / "frontend" if frozen else root / "frontend" / "dist"
+icons_dir = root / "resources" / "icons" if frozen else root / "data" / "icons"
+fixed_runtime = root / "WebView2" if frozen else root / "vendor" / "WebView2"
 os.environ["DATA_BACKEND"] = "json"
 os.environ["OFFLINE_DATA_DIR"] = str(root / "release_data")
-os.environ["ICONS_DIR"] = str(root / "resources" / "icons")
-fixed_runtime = root / "WebView2"
+os.environ["ICONS_DIR"] = str(icons_dir)
 if fixed_runtime.exists():
     os.environ["WEBVIEW2_BROWSER_EXECUTABLE_FOLDER"] = str(fixed_runtime)
 
@@ -29,12 +32,12 @@ def main() -> None:
     if "--smoke-test" in sys.argv or "--release-smoke-test" in sys.argv:
         from app.data import db
         db.init_schema()
-        if not (root / "frontend" / "index.html").is_file():
+        if not (frontend_dir / "index.html").is_file():
             raise RuntimeError("前端资源缺失")
         if "--release-smoke-test" in sys.argv and not (root / "WebView2" / "msedgewebview2.exe").is_file():
             raise RuntimeError("固定版 WebView2 Runtime 缺失")
         return
-    mount_frontend(str(root / "frontend"))
+    mount_frontend(str(frontend_dir))
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0)); port = sock.getsockname()[1]
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))

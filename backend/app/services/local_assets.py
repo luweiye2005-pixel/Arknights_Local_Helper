@@ -357,6 +357,64 @@ def download_all_relic_icons(
         _download_lock.release()
 
 
+def copy_base_icons_for_variants() -> dict[str, int]:
+    """为缺失图标的变种藏品复制其基础版本的图标。"""
+    import shutil
+    from app.data import db as _gdb
+
+    root = icons_root()
+    all_relics = _gdb.search_relics(limit=5000)
+    copied = 0
+    skipped = 0
+
+    png_icons: set[str] = {
+        p.stem for p in root.glob("*.png")
+        if p.is_file() and p.stat().st_size > 100
+    }
+
+    def _copy(src_stem: str, dst_stem: str) -> bool:
+        for suffix in (".png", ".webp", ".jpg"):
+            src = root / f"{src_stem}{suffix}"
+            if src.is_file():
+                dst = root / f"{dst_stem}{suffix}"
+                if not dst.exists():
+                    shutil.copy2(src, dst)
+                return True
+        return False
+
+    for relic in all_relics:
+        rid = relic.get("id", "")
+        icon_id = relic.get("icon_id") or rid
+        if icon_id in png_icons:
+            continue
+
+        # 策略1: 去掉 _a / _b / _c 后缀
+        base = re.sub(r"_[abc]$", "", icon_id)
+        if base != icon_id and base in png_icons:
+            if _copy(base, icon_id):
+                png_icons.add(icon_id)
+                copied += 1
+            continue
+
+        # 策略2: relic.id 去掉 _a/_b/_c 后缀后查找
+        base_rid = re.sub(r"_[abc]$", "", rid)
+        if base_rid != rid:
+            for cand in {relic.get("icon_id") or base_rid, base_rid}:
+                if cand in png_icons:
+                    if _copy(cand, icon_id):
+                        png_icons.add(icon_id)
+                        copied += 1
+                    break
+            else:
+                skipped += 1
+        else:
+            skipped += 1
+
+    logger.info(f"变种图标复制: {copied} done, {skipped} skipped")
+    _persist_meta()
+    return {"copied": copied, "skipped": skipped}
+
+
 def start_download_all_relic_icons_async(theme: str | None = None, workers: int = 6) -> dict[str, Any]:
     """后台线程启动全量图标下载（含占位图补全）。"""
     if _state.get("running"):

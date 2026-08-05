@@ -86,14 +86,62 @@ def package(source: Path, output: Path) -> None:
             if path.is_file(): z.write(path, path.relative_to(source))
 
 
+def validate(source: Path) -> dict:
+    """发布就绪硬断言：pending_in_source==0、SHA-256 校验、schema 版本。"""
+    manifest_path = source / "manifest.json"
+    data_path = source / "data.json.gz"
+    errors: list[str] = []
+
+    if not manifest_path.is_file():
+        errors.append("manifest.json 缺失")
+    if not data_path.is_file():
+        errors.append("data.json.gz 缺失")
+    if errors:
+        raise RuntimeError("；".join(errors))
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    compressed = data_path.read_bytes()
+
+    # SHA-256 硬断言
+    actual_sha = hashlib.sha256(compressed).hexdigest()
+    expected_sha = manifest.get("data_sha256", "")
+    if actual_sha != expected_sha:
+        raise RuntimeError(f"SHA-256 校验失败：清单={expected_sha} 实际={actual_sha}")
+
+    # Schema 版本
+    schema = manifest.get("schema_version")
+    if schema != SCHEMA_VERSION:
+        raise RuntimeError(f"Schema 版本不兼容：清单={schema} 预期={SCHEMA_VERSION}")
+
+    # pending_in_source 硬断言
+    with gzip.open(data_path, "rt", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    meta = payload.get("meta") or {}
+    pending = meta.get("pending_in_source", 0)
+    if pending != 0:
+        raise RuntimeError(f"pending_in_source={pending}，拒绝发布：仍有 {pending} 条规则未 approved")
+
+    result = {
+        "valid": True,
+        "schema_version": schema,
+        "data_sha256": actual_sha,
+        "pending_in_source": 0,
+        "rule_version": meta.get("rule_version"),
+        "generated_at": manifest.get("generated_at"),
+    }
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(); sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("sync"); build = sub.add_parser("build-data"); build.add_argument("--output", type=Path, default=ROOT / "release_data"); build.add_argument("--allow-pending", action="store_true")
     sub.add_parser("audit"); pack = sub.add_parser("package"); pack.add_argument("--source", type=Path, default=ROOT / "release_data"); pack.add_argument("--output", type=Path, default=ROOT / "dist" / "offline-data.zip")
+    val = sub.add_parser("validate"); val.add_argument("--source", type=Path, default=ROOT / "release_data")
     args = parser.parse_args()
     if args.command == "sync": subprocess.run([sys.executable, str(ROOT / "scripts" / "sync_gamedata.py")], check=True)
     elif args.command == "build-data": print(json.dumps(build_data(args.output, allow_pending=args.allow_pending), ensure_ascii=False))
     elif args.command == "audit": audit()
+    elif args.command == "validate": print(json.dumps(validate(args.source), ensure_ascii=False))
     else: package(args.source, args.output)
 
 
