@@ -204,7 +204,7 @@ export function usePanelController() {
       selectedRelics: tr.selectedRelics,
       relicConditions: tr.relicConditions,
       sharedGold: tr.sharedGold,
-      applyOuterBuff: tr.applyOuterBuff,
+      outerBuff: tr.outerBuff,
       manualBonus: mi.manualBonus,
       skillManual: mi.skillManual,
       enemyManual: en.enemyManual,
@@ -250,7 +250,7 @@ export function usePanelController() {
           if (saved?.relicConditions)
             tr.setRelicConditions(saved.relicConditions as Record<string, Record<string, boolean | number>>);
           if (saved?.sharedGold != null) tr.setSharedGold(saved.sharedGold as number);
-          if (saved?.applyOuterBuff != null) tr.setApplyOuterBuff(saved.applyOuterBuff as boolean);
+          if (saved?.outerBuff) tr.setOuterBuff(saved.outerBuff);
           if (saved?.manualBonus) mi.setManualBonus(saved.manualBonus as typeof mi.manualBonus);
           if (saved?.skillManual) mi.setSkillManual(saved.skillManual as typeof mi.skillManual);
           if (saved?.enemyManual) en.setEnemyManual(saved.enemyManual as typeof en.enemyManual);
@@ -288,7 +288,7 @@ export function usePanelController() {
       tr.setRelicConditions({});
     }
     en.enemySearch.onSearch("");
-    tr.loadOuterBuff(tr.theme);
+    tr.loadOuterBuffMax(tr.theme);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tr.theme]);
 
@@ -319,7 +319,13 @@ export function usePanelController() {
         relic_conditions: tr.relicConditions,
         theme_id: tr.theme,
         equivalent_grade: tr.equivalentGrade,
-        apply_outer_buff: tr.applyOuterBuff,
+        outer_buff: {
+          enabled: tr.outerBuff.enabled,
+          atk_pct: tr.outerBuff.atk_pct / 100,
+          hp_pct: tr.outerBuff.hp_pct / 100,
+          def_pct: tr.outerBuff.def_pct / 100,
+          aspd: tr.outerBuff.aspd,
+        },
         damage_type: mi.damageType,
         manual_bonus: {
           atk_pct: (mi.manualBonus.atk_pct || 0) / 100,
@@ -384,9 +390,8 @@ export function usePanelController() {
     relicConditionsSchema: tr.relicConditionsSchema,
     relicConditions: tr.relicConditions,
     sharedGold: tr.sharedGold,
-    applyOuterBuff: tr.applyOuterBuff,
-    setApplyOuterBuff: tr.setApplyOuterBuff,
-    outerBuffNote: tr.outerBuffNote,
+    outerBuff: tr.outerBuff,
+    setOuterBuff: tr.setOuterBuff,
     manualBonus: mi.manualBonus,
     setManualBonus: mi.setManualBonus,
     skillManual: mi.skillManual,

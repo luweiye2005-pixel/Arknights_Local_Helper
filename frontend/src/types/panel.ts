@@ -135,6 +135,14 @@ export type RelicContributionGroup = {
   items: RelicContributionItem[];
 };
 
+export type OuterBuff = {
+  enabled: boolean;
+  atk_pct: number;
+  hp_pct: number;
+  def_pct: number;
+  aspd: number;
+};
+
 export type PanelPersistedState = {
   operatorId?: string;
   enemyId?: string;
@@ -143,7 +151,7 @@ export type PanelPersistedState = {
   selectedRelics?: string[];
   relicConditions?: Record<string, Record<string, boolean | number>>;
   sharedGold?: number;
-  applyOuterBuff?: boolean;
+  outerBuff?: OuterBuff;
   manualBonus?: ManualBonus;
   skillManual?: SkillManual;
   enemyManual?: EnemyManual;

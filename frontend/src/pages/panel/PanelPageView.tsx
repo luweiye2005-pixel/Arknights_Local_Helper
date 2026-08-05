@@ -43,9 +43,8 @@ export default function PanelPageView({ controller }: Props) {
     relicConditionsSchema,
     relicConditions,
     sharedGold,
-    applyOuterBuff,
-    setApplyOuterBuff,
-    outerBuffNote,
+    outerBuff,
+    setOuterBuff,
     manualBonus,
     setManualBonus,
     skillManual,
@@ -246,15 +245,56 @@ export default function PanelPageView({ controller }: Props) {
               <SkillManualSection value={skillManual} onChange={setSkillManual} />
 
               <Divider>局外与手填加成</Divider>
-              <Form.Item
-                label="满级局外加成"
-                extra={outerBuffNote || "切换主题后加载补丁说明"}
-              >
-                <Switch checked={applyOuterBuff} onChange={setApplyOuterBuff} />
-                <Text type="secondary" style={{ marginLeft: 8 }}>
-                  {applyOuterBuff ? "已启用（默认满级）" : "已关闭"}
-                </Text>
+              <Form.Item label="局外加成（切换主题默认满级）">
+                <Switch
+                  checked={outerBuff.enabled}
+                  onChange={(v) => setOuterBuff((p) => ({ ...p, enabled: v }))}
+                />
               </Form.Item>
+              {outerBuff.enabled && (
+                <Row gutter={12}>
+                  <Col span={6}>
+                    <Form.Item label="攻击%">
+                      <InputNumber
+                        style={{ width: "100%" }}
+                        value={outerBuff.atk_pct}
+                        onChange={(v) => setOuterBuff((p) => ({ ...p, atk_pct: Number(v) || 0 }))}
+                        min={0} max={500} step={1}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={6}>
+                    <Form.Item label="生命%">
+                      <InputNumber
+                        style={{ width: "100%" }}
+                        value={outerBuff.hp_pct}
+                        onChange={(v) => setOuterBuff((p) => ({ ...p, hp_pct: Number(v) || 0 }))}
+                        min={0} max={500} step={1}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={6}>
+                    <Form.Item label="防御%">
+                      <InputNumber
+                        style={{ width: "100%" }}
+                        value={outerBuff.def_pct}
+                        onChange={(v) => setOuterBuff((p) => ({ ...p, def_pct: Number(v) || 0 }))}
+                        min={0} max={500} step={1}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={6}>
+                    <Form.Item label="攻速">
+                      <InputNumber
+                        style={{ width: "100%" }}
+                        value={outerBuff.aspd}
+                        onChange={(v) => setOuterBuff((p) => ({ ...p, aspd: Number(v) || 0 }))}
+                        min={0} max={200} step={1}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              )}
               <Row gutter={12}>
                 <Col span={6}>
                   <Form.Item label="手填攻击%">

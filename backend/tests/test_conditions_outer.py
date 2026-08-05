@@ -167,8 +167,10 @@ def test_panel_outer_off_and_manual():
                 "manual_bonus": {"atk_pct": 0.1},
             }
         )
-    # base 100; on: *1.6 = 160; off: *1.1 = 110
-    assert abs(on["final_panel"]["atk"] - 160) < 1e-6
+    # base 100; outer 50% as separate multiplier:
+    #   on:  100 * 1.5 (outer) * 1.1 (manual) = 165
+    #   off: 100 * 1.0 (no outer) * 1.1 (manual) = 110
+    assert abs(on["final_panel"]["atk"] - 165) < 1e-6
     assert abs(off["final_panel"]["atk"] - 110) < 1e-6
     assert on["bonus"]["apply_outer_buff"] is True
     assert off["bonus"]["apply_outer_buff"] is False

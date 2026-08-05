@@ -68,7 +68,7 @@ class PanelCalcRequest(BaseModel):
     relic_conditions: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     theme_id: Optional[str] = None
     equivalent_grade: int = 0
-    apply_outer_buff: bool = True
+    outer_buff: dict = Field(default_factory=dict)
     manual_bonus: ManualBonus = Field(default_factory=ManualBonus)
     skill_manual: SkillManual = Field(default_factory=SkillManual)
     enemy_manual: EnemyManual = Field(default_factory=EnemyManual)

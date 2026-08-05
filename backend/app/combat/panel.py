@@ -6,6 +6,7 @@ from typing import Any
 from app.combat.attributes import calc_operator_panel
 from app.combat.engine import attack_interval, resolve_hit_from_panels
 from app.combat.relics import (
+    CombatModifiers,
     build_conditional_relic_modifiers,
     build_enemy_relic_modifiers,
     build_relic_contributions,
@@ -32,7 +33,10 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
     theme_id = payload.get("theme_id")
     equivalent_grade = int(payload.get("equivalent_grade") or 0)
     enemy_level_index = int(payload.get("enemy_level") or 0)
-    apply_outer_buff = bool(payload.get("apply_outer_buff", True))
+    outer_buff = payload.get("outer_buff")
+    if outer_buff is None and "apply_outer_buff" in payload:
+        outer_buff = {"enabled": bool(payload["apply_outer_buff"])}
+    outer_buff = outer_buff or {}
     manual_bonus = payload.get("manual_bonus") or {}
     relic_conditions = payload.get("relic_conditions") or {}
     skill_manual = payload.get("skill_manual") or {}
@@ -76,7 +80,7 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
             "equivalent_grade": equivalent_grade,
             "enemy_id": enemy_id,
             "enemy_level": enemy_level_index,
-            "apply_outer_buff": apply_outer_buff,
+            "outer_buff": outer_buff,
             "manual_bonus": manual_bonus,
             "relic_conditions": relic_conditions,
             "skill_manual": skill_manual,
@@ -167,18 +171,32 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
         result["relic_contributions"] = contributions
         mods = relic_mods.merge(cond_mods)
 
-        outer_raw = get_outer_buff(theme_id) if apply_outer_buff else None
-        outer_mods = outer_buff_to_modifiers(outer_raw if apply_outer_buff else None)
+        outer_raw = get_outer_buff(theme_id)
+        if outer_buff and outer_buff.get("enabled", False):
+            outer_mods = outer_buff_to_modifiers(outer_raw) if outer_raw else CombatModifiers()
+            outer_mods.atk_pct = float(outer_buff.get("atk_pct", outer_mods.atk_pct))
+            outer_mods.hp_pct = float(outer_buff.get("hp_pct", outer_mods.hp_pct))
+            outer_mods.def_pct = float(outer_buff.get("def_pct", outer_mods.def_pct))
+            outer_mods.aspd = float(outer_buff.get("aspd", outer_mods.aspd))
+        else:
+            outer_mods = CombatModifiers()
         manual_mods = manual_bonus_to_modifiers(manual_bonus if isinstance(manual_bonus, dict) else {})
 
         total = mods.merge(outer_mods).merge(manual_mods)
         total_mods = total
 
-        # 直接乘算：藏品/条件/局外/手填 + 技能参数加算
-        direct_atk_pct = total.atk_pct + skill_atk_pct
-        combat_atk = base["atk"] * (1.0 + direct_atk_pct) + total.atk_flat
-        final_hp = base["hp"] * (1.0 + total.hp_pct + skill_hp_pct)
-        final_def = base["def"] * (1.0 + total.def_pct + skill_def_pct) + total.def_flat
+        # 局外加成为独立乘区，与藏品/技能/手填的百分比加法乘区分开
+        inner = mods.merge(manual_mods)
+        inner_atk_pct = inner.atk_pct + skill_atk_pct
+        inner_hp_pct = inner.hp_pct + skill_hp_pct
+        inner_def_pct = inner.def_pct + skill_def_pct
+        outer_mul_atk = 1.0 + outer_mods.atk_pct
+        outer_mul_hp = 1.0 + outer_mods.hp_pct
+        outer_mul_def = 1.0 + outer_mods.def_pct
+
+        combat_atk = base["atk"] * outer_mul_atk * (1.0 + inner_atk_pct) + total.atk_flat
+        final_hp = base["hp"] * outer_mul_hp * (1.0 + inner_hp_pct)
+        final_def = base["def"] * outer_mul_def * (1.0 + inner_def_pct) + total.def_flat
         final_aspd = base["attack_speed"] + total.aspd + skill_aspd
         final_res = float(base["res"]) * (1.0 + total.res_pct + skill_res_pct) + total.res_flat + skill_res_flat
         final_interval = attack_interval(base["base_attack_time"], final_aspd)
@@ -199,7 +217,11 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
             "ignore_def_pct": total.ignore_def_pct,
             "true_damage": total.true_damage,
             "skill_atk_pct": skill_atk_pct,
-            "direct_atk_pct": direct_atk_pct,
+            "inner_atk_pct": inner_atk_pct,
+            "outer_mul_atk": outer_mul_atk,
+            "outer_mul_hp": outer_mul_hp,
+            "outer_mul_def": outer_mul_def,
+            "direct_atk_pct": inner_atk_pct + outer_mods.atk_pct,
             "skill_res_flat": skill_res_flat,
             "skill_res_pct": skill_res_pct,
         }
@@ -244,7 +266,8 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
                 "aspd_from_skill": skill_aspd,
                 "res_flat_from_skill": skill_res_flat,
                 "res_pct_from_skill": skill_res_pct,
-                "apply_outer_buff": apply_outer_buff,
+                "outer_buff": outer_buff,
+                "apply_outer_buff": outer_buff.get("enabled", False),
                 "damage_pct": final["damage_pct"],
                 "ignore_def_pct": total.ignore_def_pct,
                 "true_damage": total.true_damage,
@@ -274,13 +297,17 @@ def calculate_panel(payload: dict[str, Any]) -> dict[str, Any]:
             f"攻速={base['attack_speed']:.1f} 间隔={base_interval:.3f}s{pot_note}"
         )
         steps.append(
-            f"3. 直接乘算分项：藏品ATK%={relic_mods.atk_pct:.2%} + 条件ATK%={cond_mods.atk_pct:.2%} "
-            f"+ 局外ATK%={outer_mods.atk_pct:.2%} + 手填ATK%={manual_mods.atk_pct:.2%} "
-            f"+ 技能ATK%={skill_atk_pct:.2%} = {direct_atk_pct:.2%}；"
+            f"3. 藏品/技能乘区：藏品ATK%={relic_mods.atk_pct:.2%} + 条件ATK%={cond_mods.atk_pct:.2%} "
+            f"+ 手填ATK%={manual_mods.atk_pct:.2%} "
+            f"+ 技能ATK%={skill_atk_pct:.2%} = {inner_atk_pct:.2%}；"
             f"固定ATK+={total.atk_flat:.1f}"
         )
+        if outer_mods.atk_pct or outer_mods.hp_pct or outer_mods.def_pct:
+            steps.append(
+                f"3b. 局外加成（独立乘区）：ATK×{outer_mul_atk:.4f} HP×{outer_mul_hp:.4f} DEF×{outer_mul_def:.4f}"
+            )
         steps.append(
-            f"4. 战斗面板 ATK = {base['atk']:.2f} × (1+{direct_atk_pct:.4f}) + {total.atk_flat:.1f} "
+            f"4. 战斗面板 ATK = {base['atk']:.2f} × 局外{outer_mul_atk:.4f} × (1+{inner_atk_pct:.4f}) + {total.atk_flat:.1f} "
             f"= {combat_atk:.2f}；HP={final_hp:.0f} DEF={final_def:.0f} 法抗={final_res:.1f} 攻速={final_aspd:.1f}"
         )
 

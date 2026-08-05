@@ -7,6 +7,9 @@ import {
   getThemeOuterBuff,
 } from "../../api/client";
 import { errorMessage } from "../../utils/errorMessage";
+import type { OuterBuff } from "../../types/panel";
+
+const DEFAULT_OUTER: OuterBuff = { enabled: true, atk_pct: 0, hp_pct: 0, def_pct: 0, aspd: 0 };
 
 export function useThemeRelics() {
   const [themes, setThemes] = useState<{ id: string; name: string; relic_count?: number }[]>([]);
@@ -21,8 +24,7 @@ export function useThemeRelics() {
     Record<string, Record<string, boolean | number>>
   >({});
   const [sharedGold, setSharedGold] = useState(0);
-  const [applyOuterBuff, setApplyOuterBuff] = useState(true);
-  const [outerBuffNote, setOuterBuffNote] = useState("");
+  const [outerBuff, setOuterBuff] = useState<OuterBuff>(DEFAULT_OUTER);
   const restoringTheme = useRef(false);
 
   const loadThemes = useCallback(async () => {
@@ -36,22 +38,21 @@ export function useThemeRelics() {
     }
   }, []);
 
-  const loadOuterBuff = useCallback(async (themeId: string) => {
+  // 切换主题时自动填入该主题的满级局外加成
+  const loadOuterBuffMax = useCallback(async (themeId: string) => {
     try {
       const buff = await getThemeOuterBuff(themeId);
       if (buff) {
-        const parts: string[] = [];
-        const pctFields = ["atk_pct", "hp_pct", "def_pct", "aspd"] as const;
-        for (const f of pctFields) {
-          const v = Number(buff[f] ?? 0);
-          if (v) parts.push(`${f === "aspd" ? "攻速" : f.replace("_pct", "").toUpperCase()}${v >= 0 ? "+" : ""}${(v * 100).toFixed(0)}%`);
-        }
-        setOuterBuffNote(parts.join(" "));
-      } else {
-        setOuterBuffNote("");
+        setOuterBuff({
+          enabled: true,
+          atk_pct: Math.round((buff.atk_pct || 0) * 100),
+          hp_pct: Math.round((buff.hp_pct || 0) * 100),
+          def_pct: Math.round((buff.def_pct || 0) * 100),
+          aspd: buff.aspd || 0,
+        });
       }
     } catch {
-      setOuterBuffNote("");
+      // 无局外加成数据，保持默认
     }
   }, []);
 
@@ -81,7 +82,6 @@ export function useThemeRelics() {
     if (changed) setRelicConditions(next);
   }, [relicCatalog, relicConditionsSchema, relicConditions]);
 
-  // Sync sharedGold across gold-scaling relics
   const syncSharedGold = useCallback(
     (gold: number) => {
       let changed = false;
@@ -114,11 +114,10 @@ export function useThemeRelics() {
     relicConditionsSchema,
     relicConditions, setRelicConditions,
     sharedGold, setSharedGold,
-    applyOuterBuff, setApplyOuterBuff,
-    outerBuffNote,
+    outerBuff, setOuterBuff,
     restoringTheme,
     loadThemes,
-    loadOuterBuff,
+    loadOuterBuffMax,
     onCatalogChange,
   };
 }
